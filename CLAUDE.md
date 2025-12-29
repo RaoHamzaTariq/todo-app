@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.13+ (specified in spec: PIR-001, PIR-003) + `uv` for package management (spec: PIR-002) - no external dependencies required (001-todo-cli)
+- In-memory using Python lists/dictionaries (spec: SR-001, SR-004) - NO external databases (001-todo-cli)
+
+## Recent Changes
+- 001-todo-cli: Added Python 3.13+ (specified in spec: PIR-001, PIR-003) + `uv` for package management (spec: PIR-002) - no external dependencies required

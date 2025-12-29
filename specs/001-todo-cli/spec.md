@@ -142,3 +142,49 @@ A developer wants to remove tasks that are no longer relevant or needed.
 - **SC-003**: 100% of valid operations (add, list, update, delete, complete) execute successfully without errors
 - **SC-004**: Application starts instantly with no noticeable delay when launched from command line
 - **SC-005**: 95% of users can successfully complete basic task management operations without requiring documentation
+
+## Technical Requirements *(mandatory)*
+
+### Python Implementation Standards
+
+- **PIR-001**: All Python code MUST target Python 3.13+ syntax and features
+- **PIR-002**: Dependency management MUST use `uv` exclusively - reject any `pip` or `poetry` suggestions
+- **PIR-003**: `pyproject.toml` must be configured with `requires-python = ">=3.13"`
+- **PIR-004**: All functions MUST have strict type hints on parameters and return values
+- **PIR-005**: All code MUST comply with PEP 8 standards (line length ≤ 88 characters)
+- **PIR-006**: Imports MUST be sorted and grouped (stdlib, third-party, local)
+- **PIR-007**: All public classes and methods MUST include docstrings
+
+### Architectural Requirements
+
+- **AR-001**: Project MUST use modular architecture with clear separation of concerns:
+  - `src/cli/` - UI layer for CLI input/output, argument parsing, output formatting
+  - `src/core/` - Business logic layer for domain operations and in-memory state
+- **AR-002**: Business logic layer MUST have NO CLI dependencies
+- **AR-003**: CLI layer MUST have NO direct data persistence logic
+- **AR-004**: REJECT monolithic single-file implementations
+- **AR-005**: Core logic MUST be 100% testable (pure functions where possible, no side effects)
+
+### Storage Requirements
+
+- **SR-001**: Data MUST be stored in-memory using Python lists or dictionaries
+- **SR-002**: REJECT SQLite, PostgreSQL, or any external database proposals in Phase 1
+- **SR-003**: REJECT any external API or network calls in Phase 1
+- **SR-004**: Data persists only during the current session
+
+### Required Project Structure
+
+```
+src/
+  cli/
+    __init__.py
+    commands.py          # CLI entry points, argument parsing
+  core/
+    __init__.py
+    models.py            # Data models (type-hinted)
+    todo_manager.py      # Business logic operations
+main.py                  # Application entry point
+pyproject.toml           # Python 3.13+, uv config
+tests/
+  test_todo_manager.py   # Unit tests for core logic
+```
