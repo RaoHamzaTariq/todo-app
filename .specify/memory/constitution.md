@@ -1,55 +1,40 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: N/A -> 1.0.0
+- Added principles: I. Spec-Driven Development, II. Python 3.13+ Standard, III. In-Memory Storage, IV. Core Feature Focus, V. Code Quality Standards, VI. Task ID Requirement
+- Added sections: Technology Stack Constraints, Development Workflow
+- Templates requiring updates: ⚠ plan-template.md needs Constitution Check update (pending manual review)
+- Follow-up TODOs: None
+-->
+# Todo CLI Application Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Spec-Driven Development (SDD)
+No code is to be written without a corresponding Task ID. Every feature must follow the sequence: Specify -> Plan -> Tasks -> Implement. This ensures all development is traceable and aligned with requirements.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Python 3.13+ Standard
+Use Python 3.13+ with strict type hinting, PEP 8 standards, and functional programming principles where applicable. Leverage uv for package management to ensure consistent dependency handling.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. In-Memory Storage
+Use in-memory storage only, with no external databases. This keeps the application lightweight and focused on core functionality without complex persistence concerns.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Core Feature Focus
+Focus exclusively on the 5 core features: Add, View, Update, Delete, and Mark Complete. No additional features should be implemented during Phase 1.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Code Quality Standards
+Maintain strict type hinting, PEP 8 compliance, and functional programming principles. All code must be clean, well-documented, and testable.
 
-### [PRINCIPLE_6_NAME]
+### VI. Task ID Requirement
+Every code change must be associated with a specific Task ID from the tasks.md file. This ensures traceability and prevents unauthorized feature creep.
 
+## Technology Stack Constraints
+Tech Stack: Python 3.13+, uv for package management, and no external databases (In-Memory only). No additional dependencies should be introduced without explicit approval.
 
-[PRINCIPLE__DESCRIPTION]
-
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+All development must follow the SDD sequence: Specify -> Plan -> Tasks -> Implement. The agent must reject any request to implement code that hasn't been through the /sp.plan and /sp.tasks phase.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+All development must comply with the SDD principles. Amendments to this constitution require explicit approval. All pull requests must verify compliance with these principles before merging. Code reviews must check for proper Task ID references.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2025-12-28
