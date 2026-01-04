@@ -63,7 +63,7 @@ Better Auth handles:
 import { betterAuth } from "better-auth";
 
 export const auth = betterAuth({
-  database: "postgresql://...",
+  database: process.env.DATABASE_URL,
   emailAndPassword: {
     enabled: true,
   },
