@@ -50,22 +50,23 @@ frontend/
 All backend calls should use the API client with JWT token:
 
 ```typescript
-import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const session = await auth();
-  if (!session?.token) {
+  const session = await authClient.getSession();
+
+  if (!session?.data?.session) {
     throw new Error("Not authenticated");
   }
 
-  const response = await fetch(`/api/${endpoint}`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${session.token}`,
+      Authorization: `Bearer ${session.data.session.token}`,
       ...options.headers,
     },
   });
@@ -80,16 +81,42 @@ async function apiRequest<T>(
 
 ## Better Auth Configuration
 
-Configure JWT token issuance in the Better Auth setup:
+**Client-side configuration:**
 
 ```typescript
+// lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
+});
+```
+
+**Server-side API route (Next.js App Router):**
+
+```typescript
+// app/api/auth/[...all]/route.ts
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { GET, POST } = toNextJsHandler(auth);
+```
+
+**Server auth instance:**
+
+```typescript
+// lib/auth.ts
 import { betterAuth } from "better-auth";
 
 export const auth = betterAuth({
-  // ... other config
-  plugins: [
-    // Enable JWT if needed
-  ],
+  database: {
+    provider: "postgres",
+    url: process.env.DATABASE_URL!,
+  },
+  secret: process.env.BETTER_AUTH_SECRET!,
+  emailAndPassword: {
+    enabled: true,
+  },
 });
 ```
 

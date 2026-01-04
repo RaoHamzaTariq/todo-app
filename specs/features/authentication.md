@@ -59,17 +59,42 @@ Better Auth handles:
 
 ### Required Setup
 
+**Server-side (Backend API Route Handler):**
 ```typescript
+// app/api/auth/[...all]/route.ts
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { GET, POST } = toNextJsHandler(auth);
+```
+
+**Server Auth Instance:**
+```typescript
+// lib/auth.ts
 import { betterAuth } from "better-auth";
 
 export const auth = betterAuth({
-  database: process.env.DATABASE_URL,
+  database: {
+    provider: "postgres", // or your database provider
+    url: process.env.DATABASE_URL!,
+  },
+  secret: process.env.BETTER_AUTH_SECRET!,
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [
-    // Optional plugins
-  ],
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+  },
+});
+```
+
+**Client-side (Frontend):**
+```typescript
+// lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
 });
 ```
 

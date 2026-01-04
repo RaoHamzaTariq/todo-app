@@ -19,13 +19,14 @@ capabilities:
 
 ### Non-Negotiable Rules
 
-**Rule 1: jwtClient() Plugin Requirement**
-> In `frontend/lib/auth-client.ts`, always include the `jwtClient()` plugin from Better Auth. This enables JWT token generation and management.
+**Rule 1: Better Auth Client Configuration**
+> In `frontend/lib/auth-client.ts`, use `createAuthClient` from `better-auth/react` for React/Next.js applications. Better Auth handles JWT token generation and session management automatically.
 
 **Rule 2: API Interceptor with Automatic Token Attachment**
 > Create a helper in `frontend/lib/api.ts` that automatically attaches the token:
 > ```typescript
-> headers: { Authorization: 'Bearer ' + (await authClient.token()).token }
+> const session = await authClient.getSession();
+> headers: { Authorization: 'Bearer ' + session.data.session.token }
 > ```
 
 **Rule 3: Backend JWTBearer Middleware**
@@ -68,16 +69,10 @@ Your tone is:
 **Step 1: Install Better Auth with JWT Plugin**
 ```typescript
 // frontend/lib/auth-client.ts
-import { createAuthClient } from "better-auth/client";
-import { jwtClient } from "better-auth/plugins";
+import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  plugins: [
-    jwtClient({
-      // Enable JWT token generation
-    }),
-  ],
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
 });
 ```
 
@@ -90,10 +85,10 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Get JWT token from Better Auth
-  const tokenData = await authClient.token();
+  // Get session data from Better Auth
+  const session = await authClient.getSession();
 
-  if (!tokenData?.token) {
+  if (!session?.data?.session) {
     throw new Error("Not authenticated");
   }
 
@@ -103,7 +98,7 @@ export async function apiRequest<T>(
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${tokenData.token}`,
+        Authorization: `Bearer ${session.data.session.token}`,
         ...options.headers,
       },
     }
@@ -337,19 +332,19 @@ settings.validate()
 
 **Example 1: Complete Frontend Setup**
 ```
-User: "Set up Better Auth with JWT for the frontend"
+User: "Set up Better Auth for the frontend"
 
 Agent:
-  1. ✅ Install better-auth and plugins
-  2. ✅ Create auth-client.ts with jwtClient() plugin
-  3. ✅ Create api.ts with automatic token attachment
+  1. ✅ Install better-auth
+  2. ✅ Create auth-client.ts with createAuthClient from better-auth/react
+  3. ✅ Create api.ts with automatic token attachment using getSession()
   4. ✅ Add environment variable validation
   5. ✅ Include error handling for expired tokens
 
 File structure:
   frontend/
     lib/
-      auth-client.ts   # Better Auth + jwtClient()
+      auth-client.ts   # Better Auth client
       api.ts           # API client with Bearer token
       config.ts        # Environment validation
     .env.local
@@ -474,8 +469,8 @@ Agent:
 
 | Context | Required Pattern | Notes |
 |---------|------------------|-------|
-| Better Auth client | `jwtClient()` plugin | Enables JWT token generation |
-| API request helper | `Authorization: Bearer ${token}` | Auto-attach on all requests |
+| Better Auth client | `createAuthClient()` from `better-auth/react` | Handles session and token management |
+| API request helper | `Authorization: Bearer ${token}` via `getSession()` | Auto-attach on all requests |
 | Backend JWT class | `JWTBearer` with `jose.jwt.decode()` | Stateless verification |
 | Token decoding | `BETTER_AUTH_SECRET` + `HS256` | Same secret on both sides |
 | Expiration check | Validate `exp` claim | Return 401 if expired |
@@ -490,9 +485,9 @@ Agent:
 A Better Auth + JWT implementation is DONE when:
 
 **Frontend (Next.js + Better Auth)**
-- [ ] `jwtClient()` plugin included in Better Auth config
+- [ ] `createAuthClient()` configured from `better-auth/react`
 - [ ] API client automatically attaches Bearer token
-- [ ] Token retrieved via `authClient.token()`
+- [ ] Token retrieved via `authClient.getSession()`
 - [ ] 401 errors handled with re-authentication flow
 - [ ] `BETTER_AUTH_SECRET` loaded from environment
 - [ ] HTTPS enforced in production configuration

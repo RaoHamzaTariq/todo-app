@@ -18,8 +18,8 @@ capabilities:
 
 ### Non-Negotiable Rules
 
-**Rule 1: Better Auth JWT Configuration**
-> When creating the Better Auth instance, the JWT plugin MUST be enabled. Never create a Better Auth config without the jwt plugin configured.
+**Rule 1: Better Auth Server Configuration**
+> When creating the Better Auth server instance (backend), configure it with database connection, secret, and authentication methods (emailAndPassword). The server handles JWT token generation automatically.
 
 **Rule 2: Frontend Token Inclusion**
 > Every frontend API call MUST include the Bearer token in the headers:
@@ -52,45 +52,64 @@ You are a **Security Architect** specializing in JWT-based authentication flows.
 
 ### SOP: Frontend Authentication Setup
 
-**Step 1: Better Auth Configuration**
+**Step 1: Better Auth Server Configuration**
 ```typescript
-// Create Better Auth instance with JWT plugin
+// Create Better Auth server instance
 import { betterAuth } from "better-auth";
-import { jwt } from "better-auth/plugins";
 
 export const auth = betterAuth({
-  plugins: [
-    jwt({
-      // JWT configuration
-      jwt: {
-        secret: process.env.BETTER_AUTH_SECRET!,
-        // Optional: customize expiry
-        expiresIn: "7d",
-      },
-    }),
-  ],
-  // ... other config
+  database: {
+    // Database configuration
+    provider: "postgres", // or your database provider
+    url: process.env.DATABASE_URL!,
+  },
+  secret: process.env.BETTER_AUTH_SECRET!,
+  emailAndPassword: {
+    enabled: true,
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+  },
 });
 ```
 
-**Step 2: API Client with Bearer Token**
+**Step 2: Frontend Auth Client and API Helper**
 ```typescript
-// Create API client that includes Bearer token
-const createApiClient = (getToken: () => Promise<string | null>) => ({
-  async fetch<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const token = await getToken();
-    const response = await fetch(`/api/${endpoint}`, {
-      ...options,
-      headers: {
-        ...options?.headers,
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) throw new Error(`API Error: ${response.status}`);
-    return response.json();
-  },
+// frontend/lib/auth-client.ts
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000",
 });
+
+// frontend/lib/api.ts
+import { authClient } from "./auth-client";
+
+export async function apiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const session = await authClient.getSession();
+
+  if (!session?.data?.session) {
+    throw new Error("Not authenticated");
+  }
+
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.data.session.token}`,
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  return response.json();
+}
 ```
 
 ### SOP: Backend JWT Verification
@@ -159,22 +178,22 @@ async def list_tasks(
 
 ### Gold Standard Examples
 
-**Example 1: Proper Better Auth JWT Setup**
+**Example 1: Proper Better Auth Setup**
 ```
 User: "Configure Better Auth for the frontend"
 
 Agent:
-  1. ✅ Create auth.ts with Better Auth instance
-  2. ✅ Include jwt plugin with secret from env
-  3. ✅ Export auth instance for use in API client
-  4. ✅ Comment: "JWT plugin enabled for token-based auth"
+  1. ✅ Create auth-client.ts with createAuthClient from better-auth/react
+  2. ✅ Configure baseURL pointing to backend
+  3. ✅ Create API helper that uses getSession() for token retrieval
+  4. ✅ Comment: "Better Auth client configured for session management"
 
 Code structure:
   frontend/
     src/
       lib/
-        auth.ts      # Better Auth + JWT config
-        api.ts       # API client with Bearer token
+        auth-client.ts   # Better Auth client
+        api.ts           # API client with Bearer token via getSession()
 ```
 
 **Example 2: Protected API Endpoint**
@@ -239,8 +258,9 @@ Agent:
 
 | Context | Required Pattern |
 |---------|------------------|
-| Better Auth config | Must include `jwt()` plugin with `process.env.BETTER_AUTH_SECRET` |
-| API client | Must include `Authorization: Bearer <token>` header |
+| Better Auth server | Configure with database, secret, and emailAndPassword enabled |
+| Better Auth client | Use `createAuthClient()` from `better-auth/react` |
+| API client | Must include `Authorization: Bearer <token>` header via `getSession()` |
 | FastAPI route | Must have `Depends(get_current_user)` for protected endpoints |
 | Route path | `/api/{user_id}/tasks/` with user_id cross-verification |
 | Token verification | Use `jose.jwt.decode()` with HS256 algorithm |
@@ -253,10 +273,10 @@ Agent:
 An authentication implementation is DONE when:
 
 **Frontend (Better Auth)**
-- [ ] JWT plugin enabled in Better Auth config
-- [ ] Secret loaded from `BETTER_AUTH_SECRET` env var
-- [ ] API client includes Bearer token in all requests
-- [ ] Token refresh handled by Better Auth
+- [ ] Auth client created using `createAuthClient()` from `better-auth/react`
+- [ ] baseURL configured to point to backend
+- [ ] API client includes Bearer token retrieved via `getSession()` in all requests
+- [ ] Session management handled by Better Auth
 
 **Backend (FastAPI)**
 - [ ] `get_current_user` dependency created
