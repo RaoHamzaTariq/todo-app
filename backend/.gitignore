@@ -1,3 +1,5 @@
+# Backend/.gitignore
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,26 +22,41 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual environments
+.venv/
 venv/
 ENV/
 env/
-.venv
+.venv*
 
 # Environment
 .env
 .env.local
+*.env
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Logs
-*.log
+# Database
+*.db
+*.sqlite
+
+# Distribution
+*.tar.gz
+*.whl

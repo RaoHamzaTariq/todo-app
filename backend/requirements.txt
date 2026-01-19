@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlmodel
+python-jose
+pydantic
+pydantic-settings
+python-multipart
+httpx
+pytest
+pytest-asyncio
+psycopg2-binary
+bcrypt
+dotenv

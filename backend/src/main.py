@@ -7,8 +7,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.config import settings
-from app.db.database import init_db
+from src.app.database import init_db
+from src.app.config import settings
+from src.app.routers import tasks
 
 
 @asynccontextmanager
@@ -22,7 +23,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Todo API",
-    description="RESTful API for the Todo Application",
+    description="RESTful API for the Todo Application with JWT authentication",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -30,11 +31,15 @@ app = FastAPI(
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],
+    # allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(tasks.router)
 
 
 @app.get("/health")

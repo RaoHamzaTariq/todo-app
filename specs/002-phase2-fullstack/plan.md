@@ -126,9 +126,15 @@ frontend/
 │   │   │       └── edit/
 │   │   │           └── page.tsx # Edit task
 │   │   └── api/
-│   │       └── auth/
-│   │           └── [...auth]/
-│   │               └── route.ts # Better Auth API routes
+│   │       ├── auth/
+│   │       │   └── [...auth]/
+│   │       │       └── route.ts # Better Auth API routes
+│   │       └── tasks/
+│   │           ├── route.ts     # Task list API routes (GET, POST)
+│   │           └── [id]/
+│   │               ├── route.ts # Individual task API routes (GET, PUT, DELETE)
+│   │               └── complete/
+│   │                   └── route.ts # Task completion API route (PATCH)
 │   ├── components/
 │   │   ├── TaskList.tsx
 │   │   ├── TaskItem.tsx
@@ -138,7 +144,6 @@ frontend/
 │   │   └── ui/                  # Shared UI components (Button, Input, etc.)
 │   └── lib/
 │       ├── auth-client.ts       # Better Auth client with jwtClient() plugin
-│       ├── api.ts               # API client with Bearer token interceptor
 │       └── config.ts            # Environment validation
 ├── .env.local
 ├── next.config.js
@@ -191,6 +196,49 @@ README.md
 ```
 
 **Structure Decision**: Selected **Option 2: Web application** because the feature explicitly requires "full-stack web application" with separate frontend (Next.js) and backend (FastAPI) services. The monorepo structure aligns with Constitution Principle III (Monorepo Architecture) and enables independent development, testing, and deployment of each service while maintaining a single source repository.
+
+## Website UI Guidelines
+
+### Responsive Design
+- Mobile-first approach with responsive breakpoints
+- Support for mobile, tablet, and desktop viewports
+- Touch-friendly controls and adequate tap targets
+- Responsive navigation patterns
+
+### Accessibility (a11y)
+- Semantic HTML structure
+- Proper heading hierarchy (h1, h2, h3, etc.)
+- ARIA labels and roles where appropriate
+- Keyboard navigation support
+- Sufficient color contrast ratios
+- Focus indicators for interactive elements
+
+### User Experience (UX)
+- Clear visual hierarchy and information architecture
+- Consistent design patterns throughout the application
+- Loading states and skeleton screens for better perceived performance
+- Form validation with clear error messaging
+- Confirmation dialogs for destructive actions (deletion)
+- Success feedback for user actions
+
+### Navigation
+- Intuitive navigation with clear breadcrumbs
+- Consistent header/navigation across pages
+- Proper handling of authentication state in navigation
+- Back button support and browser history management
+
+### Forms
+- Input validation with immediate feedback
+- Clear labeling of form fields
+- Appropriate input types for different data (email, password, etc.)
+- Loading states during form submission
+- Error handling and recovery
+
+### Error Handling
+- Graceful error states and recovery options
+- User-friendly error messages
+- Proper 404 and 500 error pages
+- Network error handling with retry mechanisms
 
 ## Complexity Tracking
 

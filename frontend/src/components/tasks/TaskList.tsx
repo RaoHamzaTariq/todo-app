@@ -1,0 +1,276 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { Plus, Search, CheckCircle } from "lucide-react";
+import { Task } from "@/types/task";
+import TaskItem from "./TaskItem";
+import DeleteConfirmation from "../DeleteConfirmation";
+import Link from "next/link";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const item = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1 }
+};
+
+export default function TaskList() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+
+
+  // Fetch tasks once session is available
+  useEffect(() => {
+
+    async function fetchTasks() {
+      try {
+        setLoading(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`);
+        if (!response.ok) {
+          throw new Error(`Failed to load tasks: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        setTasks(Array.isArray(data.tasks) ? data.tasks : data);
+      } catch (err: any) {
+        setError(err.message || "Failed to load tasks");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTasks();
+
+  }, []);
+
+  const handleToggle = async (taskId: number) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/complete`, {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t))
+        );
+      } else {
+        throw new Error(`Failed to toggle task: ${response.status} ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error("Failed to toggle task", err);
+    }
+  };
+
+
+  const initDelete = (taskId: number) => {
+    setDeleteTaskId(taskId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTaskId) return;
+
+    try {
+      const response = await fetch(`/api/tasks/${deleteTaskId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setTasks((prev) => prev.filter((t) => t.id !== deleteTaskId));
+        setDeleteTaskId(null);
+      } else {
+        throw new Error(`Failed to delete task: ${response.status} ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error("Failed to delete task", err);
+    }
+  };
+
+  // Filter tasks based on selected filter
+  const filteredTasks = tasks.filter(task => {
+    if (filter === 'active') return !task.completed;
+    if (filter === 'completed') return task.completed;
+    return true; // 'all'
+  });
+
+  // Filter tasks based on search query
+  const searchedTasks = filteredTasks.filter(task =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  if (loading) return (
+    <div className="flex justify-center items-center py-16 w-full">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
+      />
+    </div>
+  );
+
+  if (error) return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800"
+    >
+      <p className="text-red-600 dark:text-red-400 text-lg mb-4">{error}</p>
+      <button
+        onClick={() => window.location.reload()}
+        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+      >
+        Retry
+      </button>
+    </motion.div>
+  );
+
+  return (
+    <div className="w-full">
+      {/* Header with search and filters */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} •{" "}
+              {tasks.filter(t => t.completed).length} completed
+            </p>
+          </div>
+
+          <Link href="/tasks/new">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Add New Task</span>
+            </motion.button>
+          </Link>
+        </div>
+
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'all'
+                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'active'
+                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'completed'
+                ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+            >
+              Completed
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Task List */}
+      <LayoutGroup>
+        {searchedTasks.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-16 px-4"
+          >
+            <div className="mx-auto w-24 h-24 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 mb-6">
+              <CheckCircle className="h-12 w-12 text-blue-500 dark:text-blue-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No tasks found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              {searchQuery
+                ? `No tasks match your search for "${searchQuery}"`
+                : filter === 'completed'
+                  ? "You haven't completed any tasks yet"
+                  : filter === 'active'
+                    ? "All tasks are completed! Great job!"
+                    : "Get started by creating your first task"
+              }
+            </p>
+            <Link href="/tasks/new">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <Plus className="w-5 h-5" />
+                Create New Task
+              </motion.button>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="show"
+            className="space-y-3"
+          >
+            <AnimatePresence>
+              {searchedTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  onToggle={() => handleToggle(task.id)}
+                  onDelete={() => initDelete(task.id)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </LayoutGroup>
+
+      <DeleteConfirmation
+        isOpen={!!deleteTaskId}
+        onClose={() => setDeleteTaskId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+      />
+    </div>
+  );
+}
