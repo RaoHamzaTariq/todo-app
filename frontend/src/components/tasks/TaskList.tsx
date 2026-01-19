@@ -23,11 +23,11 @@ const item = {
   show: { y: 0, opacity: 1 }
 };
 
-export default function TaskList() {
+export default function TaskList({ defaultFilter = 'all' }: { defaultFilter?: 'all' | 'active' | 'completed' | 'starred' }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'starred'>(defaultFilter);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
@@ -38,7 +38,7 @@ export default function TaskList() {
     async function fetchTasks() {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`);
+        const response = await fetch("/api/tasks");
         if (!response.ok) {
           throw new Error(`Failed to load tasks: ${response.status} ${response.statusText}`);
         }
@@ -101,6 +101,7 @@ export default function TaskList() {
   const filteredTasks = tasks.filter(task => {
     if (filter === 'active') return !task.completed;
     if (filter === 'completed') return task.completed;
+    if (filter === 'starred') return task.starred;
     return true; // 'all'
   });
 
@@ -205,6 +206,15 @@ export default function TaskList() {
                 }`}
             >
               Completed
+            </button>
+            <button
+              onClick={() => setFilter('starred')}
+              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'starred'
+                ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+            >
+              Starred
             </button>
           </div>
         </div>

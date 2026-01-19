@@ -49,11 +49,10 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
           ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm"
           : "bg-transparent"
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -116,7 +115,7 @@ export default function Header() {
 
             {/* User menu */}
             {session?.user ? (
-              <div className="relative">
+              <div className="relative group">
                 <button className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
@@ -124,6 +123,23 @@ export default function Header() {
                     </span>
                   </div>
                 </button>
+
+                {/* Simple Hover Dropdown */}
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 min-w-[160px]">
+                    <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1">
+                      <p className="text-sm font-bold truncate">{session.user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <Link

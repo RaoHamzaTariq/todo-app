@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 const sidebarVariants = {
   open: { x: 0, opacity: 1 },
@@ -36,6 +37,7 @@ const navItems = [
 export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean; toggleSidebar: () => void }) {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
+  const { data: session } = authClient.useSession();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -68,19 +70,24 @@ export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean; to
         animate={isOpen ? "open" : "closed"}
         variants={sidebarVariants}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-900 shadow-xl z-40 md:relative md:top-0 md:h-screen md:translate-x-0 overflow-y-auto ${
-          isMobile ? 'h-[calc(100vh-4rem)]' : ''
-        }`}
+        className={`fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white dark:bg-gray-900 shadow-xl z-40 md:relative md:top-0 md:h-screen md:translate-x-0 overflow-y-auto ${isMobile ? 'h-[calc(100vh-4rem)]' : ''
+          }`}
       >
         <div className="p-6">
           {/* User Profile */}
           <div className="flex items-center space-x-3 mb-8 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
+              <span className="text-white font-bold">
+                {session?.user?.name?.charAt(0).toUpperCase() || <User className="w-5 h-5" />}
+              </span>
             </div>
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">John Doe</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">john@example.com</p>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-gray-900 dark:text-white truncate">
+                {session?.user?.name || "User"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {session?.user?.email}
+              </p>
             </div>
           </div>
 
@@ -105,11 +112,10 @@ export default function Sidebar({ isOpen, toggleSidebar }: { isOpen: boolean; to
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-                      isActive
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${isActive
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                      }`}
                   >
                     <item.icon className="w-5 h-5" />
                     <span className="font-medium">{item.label}</span>

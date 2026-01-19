@@ -5,9 +5,10 @@ import { SignJWT } from 'jose';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     // First try to get session from cookies (for browser)
     let session = await auth.api.getSession({
       headers: request.headers
@@ -50,16 +51,13 @@ export async function GET(
     } else {
       // Session from cookies
       userId = session.session.userId || session.user?.id;
-      token = session.session.token;
     }
 
-    if (!userId || !token) {
+    if (!userId) {
       return Response.json({
         error: 'Invalid session data',
       }, { status: 401 });
     }
-
-    const taskId = params.id;
 
     // Mint a new JWT for the backend communication
     const secretValue = process.env.BETTER_AUTH_SECRET;
@@ -113,9 +111,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     // First try to get session from cookies (for browser)
     let session = await auth.api.getSession({
       headers: request.headers
@@ -157,16 +156,15 @@ export async function PUT(
 
     } else {
       // Session from cookies
-      userId = session.session.userId;
+      userId = session.session.userId || session.user?.id;
     }
 
-    if (!userId || !token) {
+    if (!userId) {
       return Response.json({
         error: 'Invalid session data',
       }, { status: 401 });
     }
 
-    const taskId = params.id;
     const body = await request.json();
 
     // Mint a new JWT for the backend communication
@@ -223,9 +221,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     // First try to get session from cookies (for browser)
     let session = await auth.api.getSession({
       headers: request.headers
@@ -267,16 +266,14 @@ export async function DELETE(
 
     } else {
       // Session from cookies
-      userId = session.session.userId;
+      userId = session.session.userId || session.user?.id;
     }
 
-    if (!userId || !token) {
+    if (!userId) {
       return Response.json({
         error: 'Invalid session data',
       }, { status: 401 });
     }
-
-    const taskId = params.id;
 
     // Mint a new JWT for the backend communication
     const secretValue = process.env.BETTER_AUTH_SECRET;

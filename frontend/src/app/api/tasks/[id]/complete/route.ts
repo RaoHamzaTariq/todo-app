@@ -5,9 +5,10 @@ import { SignJWT } from 'jose';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: taskId } = await params;
     // First try to get session from cookies (for browser)
     let session = await auth.api.getSession({
       headers: request.headers
@@ -49,16 +50,15 @@ export async function PATCH(
 
     } else {
       // Session from cookies
-      userId = session.session.userId;
+      userId = session.session.userId || session.user?.id;
     }
 
-    if (!userId || !token) {
+    if (!userId) {
       return Response.json({
         error: 'Invalid session data',
       }, { status: 401 });
     }
 
-    const taskId = params.id;
 
     // Mint a new JWT for the backend communication
     const secretValue = process.env.BETTER_AUTH_SECRET;

@@ -27,7 +27,7 @@ export default function TaskDetailPage() {
     async function fetchTask() {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${id}`);
+        const response = await fetch(`/api/tasks/${id}`);
 
         if (!response.ok) {
           if (response.status === 404) {
@@ -136,20 +136,18 @@ export default function TaskDetailPage() {
       {/* Task Detail Card */}
       <motion.div
         layout
-        className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${
-          task.completed
+        className={`p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border ${task.completed
             ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
             : 'border-gray-200 dark:border-gray-700'
-        }`}
+          }`}
       >
         <div className="flex items-start gap-4">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleToggle}
-            className={`mt-1 flex-shrink-0 transition-colors ${
-              task.completed ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-blue-500'
-            }`}
+            className={`mt-1 flex-shrink-0 transition-colors ${task.completed ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-blue-500'
+              }`}
             aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
             title={task.completed ? "Mark as incomplete" : "Mark as complete"}
           >
@@ -164,11 +162,10 @@ export default function TaskDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <motion.h1
-                  className={`text-2xl font-bold break-words mb-4 ${
-                    task.completed
+                  className={`text-2xl font-bold break-words mb-4 ${task.completed
                       ? 'text-gray-500 dark:text-gray-400 line-through'
                       : 'text-gray-900 dark:text-white'
-                  }`}
+                    }`}
                 >
                   {task.title}
                 </motion.h1>
@@ -178,11 +175,10 @@ export default function TaskDetailPage() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className={`text-base ${
-                      task.completed
+                    className={`text-base ${task.completed
                         ? 'text-gray-400 dark:text-gray-500'
                         : 'text-gray-600 dark:text-gray-300'
-                    } break-words whitespace-pre-wrap mb-6`}
+                      } break-words whitespace-pre-wrap mb-6`}
                   >
                     {task.description}
                   </motion.div>
