@@ -8,10 +8,13 @@ import Link from "next/link";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
+type ValuePiece = Date | null;
+type Value = ValuePiece | [ValuePiece, ValuePiece];
+
 export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [date, setDate] = useState<Date | Date[]>(new Date());
+  const [date, setDate] = useState<Value>(new Date());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -42,7 +45,7 @@ export default function CalendarPage() {
 
   // Filter tasks based on selected date and search query
   useEffect(() => {
-    if (Array.isArray(date)) return;
+    if (!date || Array.isArray(date)) return;
 
     const selectedDate = new Date(date);
     // Format selected date to YYYY-MM-DD to compare with task dates
@@ -65,7 +68,7 @@ export default function CalendarPage() {
     setFilteredTasks(tasksForSelectedDate);
   }, [date, tasks, searchQuery]);
 
-  const handleDateChange = (value: Date | Date[]) => {
+  const handleDateChange = (value: Value) => {
     setDate(value);
   };
 
@@ -77,6 +80,17 @@ export default function CalendarPage() {
     acc[task.priority].push(task);
     return acc;
   }, {} as Record<string, Task[]>);
+
+  // Helper function to get display date
+  const getDisplayDate = () => {
+    if (!date) return 'No Date Selected';
+    if (Array.isArray(date)) return 'Selected Dates';
+    return new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   if (loading) {
     return (
@@ -179,7 +193,7 @@ export default function CalendarPage() {
               }
 
               .react-calendar__navigation button:hover {
-                background-color: rgba(156, 163, 175, 0.1); /* gray-200 with opacity */
+                background-color: rgba(156, 163, 175, 0.1);
               }
 
               .react-calendar__month-view__weekdays {
@@ -187,7 +201,7 @@ export default function CalendarPage() {
                 font-weight: bold;
                 font-size: 0.75rem;
                 line-height: 1rem;
-                color: #6b7280; /* gray-500 */
+                color: #6b7280;
               }
 
               .react-calendar__month-view__weekdays__weekday {
@@ -249,20 +263,20 @@ export default function CalendarPage() {
                 transform: translateX(-50%);
                 width: 4px;
                 height: 4px;
-                background-color: #3b82f6; /* blue-500 */
+                background-color: #3b82f6;
                 border-radius: 50%;
               }
 
               .react-calendar__tile--weekend {
-                color: #ef4444; /* red-500 */
+                color: #ef4444;
               }
 
               .react-calendar__month-view__days__day--neighboringMonth {
-                color: #9ca3af; /* gray-400 */
+                color: #9ca3af;
               }
 
               .dark .react-calendar__navigation button:hover {
-                background-color: rgba(75, 85, 99, 0.2); /* gray-600 with opacity */
+                background-color: rgba(75, 85, 99, 0.2);
               }
 
               .dark .react-calendar__tile:enabled:hover {
@@ -270,11 +284,11 @@ export default function CalendarPage() {
               }
 
               .dark .react-calendar__month-view__weekdays {
-                color: #9ca3af; /* gray-400 */
+                color: #9ca3af;
               }
 
               .dark .react-calendar__month-view__days__day--neighboringMonth {
-                color: #4b5563; /* gray-600 */
+                color: #4b5563;
               }
             `}</style>
             <Calendar
@@ -282,9 +296,9 @@ export default function CalendarPage() {
               value={date}
               locale="en-US"
               className="w-full border-0"
-              tileClassName={({ date, view }) => {
+              tileClassName={({ date: tileDate, view }) => {
                 // Highlight days that have tasks
-                const dateString = date.toISOString().split('T')[0];
+                const dateString = tileDate.toISOString().split('T')[0];
                 const hasTasks = tasks.some(task => {
                   const taskDate = new Date(task.created_at).toISOString().split('T')[0];
                   return taskDate === dateString;
@@ -292,9 +306,9 @@ export default function CalendarPage() {
 
                 // Determine if it's today
                 const today = new Date();
-                const isToday = date.getDate() === today.getDate() &&
-                               date.getMonth() === today.getMonth() &&
-                               date.getFullYear() === today.getFullYear();
+                const isToday = tileDate.getDate() === today.getDate() &&
+                  tileDate.getMonth() === today.getMonth() &&
+                  tileDate.getFullYear() === today.getFullYear();
 
                 let classes = 'react-calendar__tile ';
 
@@ -316,7 +330,7 @@ export default function CalendarPage() {
         <div className="bg-white dark:bg-gray-800/40 backdrop-blur-xl p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-              {Array.isArray(date) ? 'Selected Dates' : new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              {getDisplayDate()}
             </h2>
 
             <Link href="/tasks/new">
@@ -354,10 +368,9 @@ export default function CalendarPage() {
                   return (
                     <div key={priority} className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${
-                          priority === 'high' ? 'bg-red-500' :
-                          priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                        }`}></div>
+                        <div className={`w-3 h-3 rounded-full ${priority === 'high' ? 'bg-red-500' :
+                            priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                          }`}></div>
                         <h3 className="font-bold text-gray-900 dark:text-white capitalize">
                           {priority} Priority
                         </h3>

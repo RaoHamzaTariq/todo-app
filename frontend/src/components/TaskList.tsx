@@ -5,8 +5,8 @@ import { authClient } from "@/lib/auth-client";
 import { Task } from "@/types/task";
 import TaskItem from "./TaskItem";
 import Link from "next/link";
-import {Button} from "./ui/Button";
-import {Card} from "./ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);

@@ -26,13 +26,13 @@ const sidebarVariants = {
     x: 0,
     opacity: 1,
     width: "18rem", // 72 in tailwind
-    transition: { type: "spring", damping: 25, stiffness: 200 }
+    transition: { type: "spring" as const, damping: 25, stiffness: 200 }
   },
   closed: {
     x: -300,
     opacity: 0,
     width: 0,
-    transition: { type: "spring", damping: 25, stiffness: 200 }
+    transition: { type: "spring" as const, damping: 25, stiffness: 200 }
   }
 };
 

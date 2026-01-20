@@ -3,7 +3,7 @@
 import { Task } from "@/types/task";
 import Link from "next/link";
 import { CheckCircle, Circle, Trash2, Edit3, Clock } from "lucide-react";
-import Button from "./ui/Button";
+import { Button } from "@/components/ui/Button";
 
 interface TaskItemProps {
   task: Task;

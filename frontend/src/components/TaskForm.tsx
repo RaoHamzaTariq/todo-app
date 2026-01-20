@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
 import { createAuthClient } from "better-auth/react"
-import Button from "./ui/Button";
-import Input from "./ui/Input";
-import Card from "./ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
 
 interface TaskFormProps {
   initialTitle?: string;
@@ -26,10 +25,10 @@ export default function TaskForm({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const {useSession} = createAuthClient()
+  const { useSession } = createAuthClient()
   const {
-        data: session
-    } = useSession()
+    data: session
+  } = useSession()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +74,7 @@ export default function TaskForm({
   };
 
   return (
-    <Card className="p-6" role="region" aria-labelledby="form-heading">
+    <Card className="p-6">
       <h2 id="form-heading" className="text-2xl font-bold text-gray-900 mb-6">
         {mode === "create" ? "Create New Task" : "Edit Task"}
       </h2>
