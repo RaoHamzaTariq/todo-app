@@ -16,7 +16,8 @@
       "Bash(git rev-parse --git-dir)",
       "Bash(mkdir -p \"frontend/src/app/\\(auth\\)/sign-in\")",
       "Bash(mkdir frontendsrcapp\\\\\\(auth\\\\\\)sign-in)",
-      "Bash(mkdir frontendsrcapp\\\\\\(auth\\\\\\)sign-up)"
+      "Bash(mkdir frontendsrcapp\\\\\\(auth\\\\\\)sign-up)",
+      "Bash(git --version)"
     ]
   }
 }

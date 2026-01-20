@@ -82,6 +82,8 @@ user_id
 title
 description
 completed
+priority (low | medium | high, default: medium)
+is_starred (boolean, default: false)
 created_at
 updated_at
 ```
@@ -127,7 +129,9 @@ Expose **task operations as tools** for the AI agent.
 {
   "user_id": "string",
   "title": "string",
-  "description": "string?"
+  "description": "string?",
+  "priority": "low | medium | high?",
+  "is_starred": "boolean?"
 }
 ```
 
@@ -148,7 +152,7 @@ Returns:
 ```json
 {
   "user_id": "string",
-  "status": "all | pending | completed"
+  "status": "all | pending | completed | starred"
 }
 ```
 
@@ -183,7 +187,10 @@ Returns:
   "user_id": "string",
   "task_id": 1,
   "title": "string?",
-  "description": "string?"
+  "description": "string?",
+  "priority": "low | medium | high?",
+  "is_starred": "boolean?",
+  "completed": "boolean?"
 }
 ```
 
@@ -214,10 +221,12 @@ Rules:
 
 Behavior Mapping:
 - add / remember / create → add_task
-- list / show / see → list_tasks
+- list / show / see / starred → list_tasks
 - done / complete → complete_task
 - delete / remove → delete_task
 - update / change / rename → update_task
+- priority / high / low / medium → update_task
+- star / unstar → update_task
 ```
 
 ---
@@ -368,8 +377,20 @@ ChatPage
 User: "Add a task to buy groceries"
 → add_task
 
+User: "Add a high priority task to call doctor tomorrow"
+→ add_task(priority="high")
+
+User: "Star the project deadline task"
+→ update_task(is_starred=true)
+
 User: "What's pending?"
 → list_tasks(status="pending")
+
+User: "What are my starred tasks?"
+→ list_tasks(status="starred")
+
+User: "Set task 3 priority to high"
+→ update_task(priority="high")
 
 User: "Mark task 3 as done"
 → complete_task(3)

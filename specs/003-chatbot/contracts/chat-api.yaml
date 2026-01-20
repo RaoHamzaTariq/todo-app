@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: AI Chatbot API
+  description: API for the AI Chatbot feature that allows users to manage tasks through natural language conversation
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.todoapp.com
+    description: Production server
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Process chat message and return AI response
+      description: Sends a chat message to the AI agent, processes it through MCP tools, and returns the AI response with tool calls
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - conversation_id
+                - message
+              properties:
+                conversation_id:
+                  type: integer
+                  description: Unique identifier for the conversation
+                  example: 12
+                message:
+                  type: string
+                  description: User's chat message
+                  example: "Add a task to buy groceries"
+      responses:
+        '200':
+          description: Successful response from the AI agent
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation_id
+                  - response
+                properties:
+                  conversation_id:
+                    type: integer
+                    description: Unique identifier for the conversation
+                    example: 12
+                  response:
+                    type: string
+                    description: AI agent's response to the user
+                    example: "✅ I've added 'Buy groceries' to your tasks."
+                  tool_calls:
+                    type: array
+                    description: List of MCP tools called during processing
+                    items:
+                      type: object
+                      properties:
+                        tool:
+                          type: string
+                          description: Name of the MCP tool called
+                          example: "add_task"
+                        task_id:
+                          type: integer
+                          description: ID of the task affected (if applicable)
+                          example: 5
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/{user_id}/chat/{conversation_id}:
+    get:
+      summary: Get conversation history
+      description: Retrieves the full history of messages in a specific conversation
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Unique identifier for the user
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          description: Unique identifier for the conversation
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Conversation history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - conversation_id
+                  - messages
+                properties:
+                  conversation_id:
+                    type: integer
+                    description: Unique identifier for the conversation
+                    example: 12
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Message:
+      type: object
+      required:
+        - id
+        - role
+        - content
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the message
+          example: 1
+        role:
+          type: string
+          enum: [user, assistant]
+          description: Role of the message sender
+          example: "user"
+        content:
+          type: string
+          description: Content of the message
+          example: "Add a task to buy groceries"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the message was created
+          example: "2026-01-20T10:00:00Z"
+
+    # Task model reflecting the actual database schema
+    Task:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - completed
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the task
+          example: 1
+        user_id:
+          type: string
+          description: Owner of the task
+          example: "user_123"
+        title:
+          type: string
+          description: Task title
+          example: "Buy groceries"
+        description:
+          type: string
+          description: Optional task description
+          example: "Need to buy milk, bread, and eggs"
+        completed:
+          type: boolean
+          description: Completion status
+          example: false
+        priority:
+          type: string
+          description: Task priority level
+          enum: [low, medium, high]
+          example: "medium"
+        is_starred:
+          type: boolean
+          description: Whether task is starred as important
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was created
+          example: "2026-01-20T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when task was last updated
+          example: "2026-01-20T10:00:00Z"
+
+    # MCP Tool Schemas - These represent the actual tool call payloads
+    AddTaskRequest:
+      type: object
+      required:
+        - user_id
+        - title
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_123"
+        title:
+          type: string
+          description: Task title
+          example: "Buy groceries"
+        description:
+          type: string
+          description: Optional task description
+          example: "Milk, bread, eggs"
+        priority:
+          type: string
+          description: Task priority level
+          enum: [low, medium, high]
+          example: "medium"
+        is_starred:
+          type: boolean
+          description: Whether task is starred as important
+          example: false
+
+    ListTasksRequest:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_123"
+        status:
+          type: string
+          description: Task status filter
+          enum: [all, pending, completed, starred]
+          example: "all"
+
+    CompleteTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_123"
+        task_id:
+          type: integer
+          description: Unique identifier for the task
+          example: 5
+
+    DeleteTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_123"
+        task_id:
+          type: integer
+          description: Unique identifier for the task
+          example: 5
+
+    UpdateTaskRequest:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          description: Unique identifier for the user
+          example: "user_123"
+        task_id:
+          type: integer
+          description: Unique identifier for the task
+          example: 5
+        title:
+          type: string
+          description: New task title (optional)
+          example: "Buy weekly groceries"
+        description:
+          type: string
+          description: New task description (optional)
+          example: "Milk, bread, eggs, fruits"
+        priority:
+          type: string
+          description: New task priority (optional)
+          enum: [low, medium, high]
+          example: "high"
+        is_starred:
+          type: boolean
+          description: New starred status (optional)
+          example: true
+        completed:
+          type: boolean
+          description: New completion status (optional)
+          example: true
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
