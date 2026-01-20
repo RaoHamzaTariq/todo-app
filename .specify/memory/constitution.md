@@ -1,19 +1,17 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 -> 2.0.0 (MAJOR: fundamental architecture and persistence changes)
-- Replaced principles:
-  - III. In-Memory Storage -> IX. Persistence Law (Neon PostgreSQL + SQLModel)
-  - IV. Core Feature Focus -> X. Web-First Architecture (CLI deprecated)
+- Version change: 2.0.0 -> 3.0.0 (MAJOR: fundamental architecture changes with AI Agent, MCP Tools, and Stateless requirements)
 - Added principles:
-  - III. Monorepo Architecture (Frontend/Backend separation)
-  - VI. Multi-User Security (user_id ownership + JWT verification)
-  - VII. Authentication (Better Auth + JWT plugin)
-  - VIII. API Standards (/api/{user_id}/tasks/ pattern)
-- Updated sections: Technology Stack Constraints, Development Workflow
+  - XI. AI Agent Architecture Law (OpenAI Agents SDK integration)
+  - XII. MCP (Model Context Protocol) Tools Law (MCP tools for task operations)
+  - XIII. Stateless Architecture Law (No server state, DB persistence only)
+  - XIV. Chat API Standards (Chat endpoint patterns)
+  - XV. Conversation Context Management (Conversation/message models)
+- Updated sections: Technology Stack Constraints (added OpenAI Agents SDK, Official MCP SDK, Custom chatbot UI), Development Workflow (added MCP usage check, stateless compliance)
 - Templates requiring updates:
-  - .specify/templates/plan-template.md (✅ Structure section already flexible)
-  - .specify/templates/spec-template.md (✅ Already technology-agnostic)
-  - .specify/templates/tasks-template.md (✅ Already references plan structure)
+  - .specify/templates/plan-template.md (✅ Need to add AI/MCP considerations)
+  - .specify/templates/spec-template.md (✅ Need to add AI/MCP requirements)
+  - .specify/templates/tasks-template.md (✅ Need to add MCP-related tasks)
 - Templates validated: phr-template.md (aligned)
 - Follow-up TODOs: None
 -->
@@ -154,7 +152,76 @@ All endpoints MUST follow the RESTful pattern:
 - Reusable components accessible by any interface (Web, CLI, API)
 - Data models independent of presentation layer
 
-### XI. Constitution Compliance Enforcement
+### XI. AI Agent Architecture Law
+
+**OpenAI Agents SDK Integration:**
+- All AI functionality MUST use the OpenAI Agents SDK
+- Natural language processing for task management is the primary AI use case
+- Agent design must follow the patterns: agents, handoffs, guardrails, sessions, and tracing
+
+**Agent Behavior Requirements:**
+- Agents must use MCP tools exclusively for task operations
+- Never modify tasks directly without using MCP tools
+- Always confirm actions in natural language to users
+- Handle errors gracefully and ask for clarification when ambiguous
+
+### XII. MCP (Model Context Protocol) Tools Law
+
+**MCP Tool Requirements:**
+- Task operations MUST be exposed as MCP tools for AI agents
+- MCP tools must follow the specified schema: `add_task`, `list_tasks`, `complete_task`, `delete_task`, `update_task`
+- MCP tools MUST validate `user_id` for data ownership
+- MCP tools MAY access database but MUST NOT store session state
+- MCP tools MUST NOT call OpenAI directly
+
+**Tool Schema Compliance:**
+- `add_task`: { "user_id": "string", "title": "string", "description": "string?" }
+- `list_tasks`: { "user_id": "string", "status": "all | pending | completed" }
+- `complete_task`: { "user_id": "string", "task_id": 3 }
+- `delete_task`: { "user_id": "string", "task_id": 2 }
+- `update_task`: { "user_id": "string", "task_id": 1, "title": "string?", "description": "string?" }
+
+### XIII. Stateless Architecture Law
+
+**Server Statelessness:**
+- Server stores NO memory or session state
+- Conversation context MUST be rebuilt from database every request
+- Runtime state MUST be discarded after each request (Rule 9 in flow)
+- All state persisted in database (tasks, conversations, messages)
+
+**State Recovery:**
+- System MUST be restart-safe
+- Conversation context MUST be resumable after server restart
+- No reliance on in-memory caches for critical state
+
+### XIV. Chat API Standards
+
+**Endpoint Pattern:**
+- `POST /api/{user_id}/chat` - Primary chat endpoint (stateless)
+- Request: { "conversation_id": 12, "message": "Add a task to buy groceries" }
+- Response: { "conversation_id": 12, "response": "✅ I've added 'Buy groceries' to your tasks.", "tool_calls": [...] }
+
+**Chat Flow Requirements:**
+- Fetch conversation history from DB (Step 2)
+- Append and save user message (Steps 3-4)
+- Run agent with full history (Step 5)
+- Agent invokes MCP tool(s) (Step 6)
+- Save assistant message (Step 7)
+- Return response and discard runtime state (Steps 8-9)
+
+### XV. Conversation Context Management
+
+**Database Models:**
+- **Task Model**: id, user_id, title, description, completed, created_at, updated_at
+- **Conversation Model**: id, user_id, created_at, updated_at
+- **Message Model**: id, conversation_id, user_id, role (user | assistant), content, created_at
+
+**Context Persistence:**
+- All conversation history stored in database
+- Messages linked to conversations and users
+- Conversation context rebuilt from DB for each request
+
+### XVI. Constitution Compliance Enforcement
 
 Before saving any code:
 1. Verify implementation does not violate `.specify/memory/constitution.md` principles
@@ -163,7 +230,7 @@ Before saving any code:
 4. Validate implementation is the smallest viable change
 5. Check code includes proper file references and Task ID comment
 
-### XII. Smallest Viable Change
+### XVII. Smallest Viable Change
 
 All implementations must be the smallest viable change per task requirements. Avoid refactoring unrelated code, adding premature features, or making architectural changes outside the planned scope. Changes should be focused, testable, and directly address the Task ID.
 
@@ -173,12 +240,15 @@ All implementations must be the smallest viable change per task requirements. Av
 - Next.js 16+
 - TypeScript
 - Better Auth for authentication
+- Custom chatbot UI (Tailwind CSS)
 
 **Backend:**
 - Python 3.13+
 - FastAPI
 - SQLModel
 - Neon Serverless PostgreSQL
+- OpenAI Agents SDK
+- Official MCP SDK
 
 **Shared:**
 - JWT for authentication tokens
@@ -204,6 +274,8 @@ Before writing any code:
    - Is it the smallest viable change?
    - Does it follow API standards?
    - Is JWT verification implemented where required?
+   - Does it comply with stateless architecture?
+   - Does it use MCP tools for task operations?
 4. If alignment fails -> **DO NOT SAVE** -> Surface violation with specific principle reference
 5. If alignment passes -> Proceed with implementation
 
@@ -219,6 +291,8 @@ Before writing any code:
 | Code fails alignment check | Do not save, surface violation, propose fix |
 | No JWT verification on protected endpoint | Block and require JWT middleware |
 | Missing `user_id` on task operations | Block and require user_id validation |
+| Direct task modification bypassing MCP | Block and require MCP tool usage |
+| Session state storage on server | Block and require database persistence |
 
 ## Governance
 
@@ -237,6 +311,6 @@ Constitution compliance is verified at:
 2. Planning phase (`/sp.plan`) - Constitution Check before design
 3. Task generation (`/sp.tasks`) - Ensure all tasks reference plan sections
 4. Implementation (`/sp.implement`) - Task ID validation and alignment check
-5. Code reviews - Verify Task ID comments, JWT verification, and principle adherence
+5. Code reviews - Verify Task ID comments, JWT verification, MCP usage, and principle adherence
 
-**Version**: 2.0.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2026-01-03
+**Version**: 3.0.0 | **Ratified**: 2025-12-28 | **Last Amended**: 2026-01-20
