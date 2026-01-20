@@ -56,10 +56,12 @@ def get_session_context():
 def init_db():
     """Initialize database tables."""
     # Import all models to register them
-    # Note: Only importing Task model as User table is managed by Better Auth
+    # Note: Only importing Task, Conversation, and Message models as User table is managed by Better Auth
     from src.app.models.task import Task
+    from src.app.models.conversation import Conversation
+    from src.app.models.message import Message
 
-    # Create all tables (only Task table, User table is managed by Better Auth)
+    # Create all tables (Task, Conversation, Message tables; User table is managed by Better Auth)
     SQLModel.metadata.create_all(engine)
     print("Database tables created successfully")
 

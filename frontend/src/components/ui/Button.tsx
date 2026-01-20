@@ -1,4 +1,5 @@
 import { ButtonHTMLAttributes, ReactNode, ElementType } from 'react';
+import { cn } from '../../lib/utils';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -31,12 +32,12 @@ export function Button({
   };
 
   const sizeClasses = {
-    sm: 'text-sm px-3 py-1.5 text-xs',
+    sm: 'text-sm px-3 py-1.5',
     md: 'text-sm px-4 py-2',
     lg: 'text-base px-6 py-3',
   };
 
-  const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+  const classes = cn(baseClasses, variantClasses[variant], sizeClasses[size], className);
 
   const Element = as || 'button';
 

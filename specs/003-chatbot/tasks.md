@@ -97,26 +97,28 @@ Implement in priority order: foundational components first, then user stories in
 
 **Skills**: `monorepo-architect`, `clean-code-pythonist`, `api-contract-steward`
 
-- [ ] T001 Set up project structure with frontend and backend directories per plan
-- [ ] T002 Configure Python dependencies (FastAPI, SQLModel, OpenAI Agents SDK) in backend
-- [ ] T003 Configure TypeScript/Next.js dependencies in frontend
-- [ ] T004 Set up database connection with Neon PostgreSQL per plan
-- [ ] T005 Configure MCP SDK for tool server implementation
+- [X] T001 Set up project structure with frontend and backend directories per plan
+- [X] T002 Configure Python dependencies (FastAPI, SQLModel, OpenAI Agents SDK) in backend
+- [X] T003 Configure TypeScript/Next.js dependencies in frontend
+- [X] T004 Set up database connection with Neon PostgreSQL per plan
+- [X] T005 Configure MCP SDK for tool server implementation
 
 ## Phase 2: Foundational Components
 
-**Skills**: `clean-code-pythonist`, `mcp-builder`, `better-auth-specialist`, `auth-security-specialist`, `data-ownership-enforcer`, `api-contract-steward`, `monorepo-architect`
+**Skills**: `clean-code-pythonist`, `mcp-builder`, `openai-agents-sdk`, `better-auth-specialist`, `auth-security-specialist`, `data-ownership-enforcer`, `api-contract-steward`, `monorepo-architect`, `website-ui-architect`
 
-- [ ] T006 [P] Create Task, Conversation, and Message models per data-model.md
-- [ ] T007 [P] Create database indexes per data-model.md constraints
-- [ ] T008 [P] Implement database connection pool and session management
-- [ ] T009 Create MCP server foundation with proper tool registration
-- [ ] T010 Create basic FastAPI application structure with CORS and middleware
-- [ ] T011 Implement authentication service with Better Auth integration
-- [ ] T012 Create base chat controller with conversation history loading
-- [ ] T012.1 [P] Create frontend components for chat interface (ChatContainer, MessageBubble, InputArea) per UI guidelines
-- [ ] T012.2 [P] Implement conversation history display with proper message formatting per UI guidelines
-- [ ] T012.3 [P] Create reusable UI components for chat interface (MessageList, MessageInput, TypingIndicator) per UI guidelines
+- [X] T006 [P] Create Task, Conversation, and Message models per data-model.md
+- [X] T007 [P] Create database indexes per data-model.md constraints
+- [X] T008 [P] Implement database connection pool and session management
+- [X] T009 Create MCP server foundation with proper tool registration and OpenAI Agents SDK integration
+- [X] T010 Create basic FastAPI application structure with CORS and middleware
+- [X] T011 Implement authentication service with Better Auth integration
+- [X] T012 Create base chat controller with conversation history loading and OpenAI Agent initialization
+- [X] T012.1 [P] Create frontend components for chat interface (ChatContainer, MessageBubble, InputArea) per UI guidelines with modern design
+- [X] T012.2 [P] Implement conversation history display with proper message formatting per UI guidelines with modern design
+- [X] T012.3 [P] Create reusable UI components for chat interface (MessageList, MessageInput, TypingIndicator) per UI guidelines with modern design
+- [X] T013 [P] Implement initial MCP tools registration (add_task, list_tasks) using MCP Builder patterns
+- [X] T014 [P] Configure OpenAI Agent with MCP tools integration using OpenAI Agents SDK
 
 ## Phase 3: User Story 1 - Create Tasks via Chat with MCP Tools (P1)
 
@@ -253,11 +255,11 @@ Implement in priority order: foundational components first, then user stories in
 - [ ] T051 Create proper documentation and quickstart guide for the feature
 - [ ] T052 Conduct end-to-end testing of all user stories and acceptance scenarios
 - [ ] T053 Validate all constitutional compliance requirements are met
-- [ ] T055 Implement searchable conversation history in UI per UI guidelines
-- [ ] T056 Add ability to clear or archive conversations in UI per UI guidelines
-- [ ] T057 Implement conversation history sidebar or navigation panel per UI guidelines
-- [ ] T058 Add keyboard navigation support for chat interface per UI guidelines
-- [ ] T059 Implement smooth loading states during conversation processing per UI guidelines
-- [ ] T060 Add conversation recovery mechanism after connection loss per UI guidelines
-- [ ] T061 Implement responsive design for all chat components per UI guidelines
-- [ ] T062 Add proper ARIA labels and accessibility features to chat interface per UI guidelines
+- [ ] T054 Implement searchable conversation history in UI per UI guidelines
+- [ ] T055 Add ability to clear or archive conversations in UI per UI guidelines
+- [ ] T056 Implement conversation history sidebar or navigation panel per UI guidelines
+- [ ] T057 Add keyboard navigation support for chat interface per UI guidelines
+- [ ] T058 Implement smooth loading states during conversation processing per UI guidelines
+- [ ] T059 Add conversation recovery mechanism after connection loss per UI guidelines
+- [ ] T060 Implement responsive design for all chat components per UI guidelines
+- [ ] T061 Add proper ARIA labels and accessibility features to chat interface per UI guidelines
