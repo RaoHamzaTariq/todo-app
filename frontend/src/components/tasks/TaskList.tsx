@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
-import { Plus, Search, CheckCircle } from "lucide-react";
+import { Plus, Search, CheckCircle, Star } from "lucide-react";
 import { Task } from "@/types/task";
 import TaskItem from "./TaskItem";
 import DeleteConfirmation from "../DeleteConfirmation";
@@ -145,77 +145,56 @@ export default function TaskList({ defaultFilter = 'all' }: { defaultFilter?: 'a
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'} •{" "}
-              {tasks.filter(t => t.completed).length} completed
+            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              My Tasks
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-2 font-medium">
+              <span className="flex h-2 w-2 rounded-full bg-blue-500"></span>
+              {tasks.length} tasks • {tasks.filter(t => t.completed).length} completed
             </p>
           </div>
 
           <Link href="/tasks/new">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-medium shadow-lg hover:shadow-xl transition-shadow"
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full lg:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3.5 px-8 rounded-2xl font-bold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transition-all"
             >
               <Plus className="w-5 h-5" />
-              <span>Add New Task</span>
+              <span>Create Task</span>
             </motion.button>
           </Link>
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="flex flex-col md:flex-row gap-4 mb-2">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors w-5 h-5" />
             <input
               type="text"
-              placeholder="Search tasks..."
+              placeholder="Search tasks by title or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
             />
           </div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'all'
-                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('active')}
-              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'active'
-                ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-            >
-              Active
-            </button>
-            <button
-              onClick={() => setFilter('completed')}
-              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'completed'
-                ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-            >
-              Completed
-            </button>
-            <button
-              onClick={() => setFilter('starred')}
-              className={`px-4 py-3 rounded-lg font-medium transition-colors ${filter === 'starred'
-                ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-            >
-              Starred
-            </button>
+          <div className="flex p-1.5 bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-x-auto no-scrollbar">
+            {(['all', 'active', 'completed', 'starred'] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${filter === f
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+              >
+                {f === 'starred' && <Star className={`w-4 h-4 ${filter === f ? 'fill-current' : ''}`} />}
+                <span className="capitalize">{f}</span>
+              </button>
+            ))}
           </div>
         </div>
       </motion.div>

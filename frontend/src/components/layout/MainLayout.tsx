@@ -13,7 +13,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Auto-open on desktop, auto-close on mobile ONLY on initial load or resize that crosses threshold
+      if (!mobile) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
     };
 
     checkMobile();
@@ -27,12 +34,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
-      <Header />
+      <Header onToggleSidebar={toggleSidebar} isSidebarOpen={sidebarOpen} />
 
       <div className="flex flex-1 pt-16">
         <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
 
-        <main className="flex-1 p-4 md:p-8 bg-gray-50 dark:bg-gray-950 transition-all duration-300">
+        <main className={`flex-1 p-4 md:p-8 bg-gray-50 dark:bg-gray-950 transition-all duration-300 ${sidebarOpen && !isMobile ? "ml-0" : ""}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

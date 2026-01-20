@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Button from "./ui/Button";
+import { Button } from "@/components/ui/Button";
 
 export default function Navigation() {
   const router = useRouter();

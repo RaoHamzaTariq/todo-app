@@ -5,6 +5,8 @@ import { useRouter, useParams } from "next/navigation";
 import TaskForm from "@/components/tasks/TaskForm";
 import { authClient } from "@/lib/auth-client";
 import { Task } from "@/types/task";
+import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 
 export default function EditTaskPage() {
   const router = useRouter();
@@ -34,12 +36,43 @@ export default function EditTaskPage() {
     fetchTask();
   }, [session, taskId]);
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
-  if (error || !task) return <div className="text-center py-20 text-red-600">{error || "Task not found"}</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"
+      />
+      <p className="text-gray-600 dark:text-gray-400 font-medium">Loading task details...</p>
+    </div>
+  );
+
+  if (error || !task) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+      <div className="bg-red-50 dark:bg-red-900/20 p-8 rounded-2xl border border-red-100 dark:border-red-800 text-center max-w-md w-full">
+        <p className="text-red-600 dark:text-red-400 text-lg font-semibold mb-4">{error || "Task not found"}</p>
+        <button
+          onClick={() => router.push("/tasks")}
+          className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors font-medium"
+        >
+          Back to Tasks
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="max-w-xl mx-auto">
+    <div className="min-h-screen bg-transparent px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium group"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            Back
+          </button>
+        </div>
         <TaskForm
           mode="edit"
           taskId={task.id}

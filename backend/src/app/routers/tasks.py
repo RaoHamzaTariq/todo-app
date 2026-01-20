@@ -7,7 +7,7 @@ The user_id in the path must match the user_id in the JWT token.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
@@ -235,7 +235,7 @@ async def delete_task(
     # Delete task
     service.delete_task(task, auth_user["user_id"])
 
-    return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch(

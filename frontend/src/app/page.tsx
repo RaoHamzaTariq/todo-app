@@ -42,7 +42,7 @@ export default function Home() {
               Boost Your <span className="bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Productivity</span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-12">
-              TaskFlow helps you organize, prioritize, and complete your tasks with ease.
+              StructDo helps you organize, prioritize, and complete your tasks with ease.
               Join thousands of users who have transformed their workflow.
             </p>
           </motion.div>

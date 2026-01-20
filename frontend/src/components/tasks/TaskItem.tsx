@@ -27,8 +27,8 @@ export default function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
       exit="exit"
       transition={{ duration: 0.3 }}
       className={`p-5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border transition-all hover:shadow-md group ${task.completed
-          ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
-          : 'border-gray-200 dark:border-gray-700'
+        ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20'
+        : 'border-gray-200 dark:border-gray-700'
         }`}
       role="listitem"
       aria-label={`${task.title}${task.completed ? ' (completed)' : ' (incomplete)'}`}
@@ -57,83 +57,83 @@ export default function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
         </motion.button>
 
         <div className="flex-1 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <motion.h3
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className={`text-lg font-semibold break-words ${task.completed
-                    ? 'text-gray-500 dark:text-gray-400 line-through'
+          <Link href={`/tasks/${task.id}`} className="group/title block">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <motion.h3
+                  className={`text-lg font-semibold break-words transition-colors group-hover/title:text-blue-600 dark:group-hover/title:text-blue-400 ${task.completed
+                    ? 'text-gray-400 dark:text-gray-500 line-through'
                     : 'text-gray-900 dark:text-white'
-                  }`}
-              >
-                {task.title}
-              </motion.h3>
+                    }`}
+                >
+                  {task.title}
+                </motion.h3>
 
-              {task.description && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className={`mt-2 text-sm ${task.completed
+                {task.description && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className={`mt-1.5 text-sm line-clamp-2 ${task.completed
                       ? 'text-gray-400 dark:text-gray-500'
                       : 'text-gray-600 dark:text-gray-300'
-                    } break-words`}
-                >
-                  {task.description}
-                </motion.p>
-              )}
-
-              {/* Task metadata */}
-              <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400">
-                <span className="flex items-center gap-1" aria-label={`Created on ${formattedDate}`}>
-                  <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-                  {formattedDate}
-                </span>
-
-                {task.priority === 'high' && (
-                  <span className="flex items-center gap-1 text-red-500">
-                    <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                    High Priority
-                  </span>
+                      } break-words`}
+                  >
+                    {task.description}
+                  </motion.p>
                 )}
 
-                {task.starred && (
-                  <span className="flex items-center gap-1 text-yellow-500">
-                    <Star className="w-3.5 h-3.5" aria-hidden="true" />
-                    Important
+                {/* Task metadata */}
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  <span className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700/50 rounded-full" aria-label={`Created on ${formattedDate}`}>
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
+                    {formattedDate}
                   </span>
-                )}
+
+                  {task.priority === 'high' && (
+                    <span className="flex items-center gap-1.5 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full">
+                      <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                      High Priority
+                    </span>
+                  )}
+
+                  {task.starred && (
+                    <span className="flex items-center gap-1.5 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full">
+                      <Star className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
+                      Important
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
+          </Link>
+        </div>
 
-            <div className="flex gap-2 sm:gap-1 flex-shrink-0 mt-1 sm:mt-0">
-              <Link href={`/tasks/${task.id}/edit`}>
-                <motion.button
-                  whileHover={{ scale: 1.1, backgroundColor: "#f3f4f6" }}
-                  whileTap={{ scale: 0.9 }}
-                  className="p-2 sm:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  title="Edit task"
-                  aria-label="Edit task"
-                >
-                  <Edit3 className="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true" />
-                  <span className="sr-only">Edit Task</span>
-                </motion.button>
-              </Link>
+        <div className="flex gap-2 sm:gap-1 flex-shrink-0 mt-1 sm:mt-0">
+          <Link href={`/tasks/${task.id}/edit`}>
+            <motion.button
+              whileHover={{ scale: 1.1, backgroundColor: "#f3f4f6" }}
+              whileTap={{ scale: 0.9 }}
+              className="p-2 sm:p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Edit task"
+              aria-label="Edit task"
+            >
+              <Edit3 className="w-4 h-4 text-gray-600 dark:text-gray-300" aria-hidden="true" />
+              <span className="sr-only">Edit Task</span>
+            </motion.button>
+          </Link>
 
-              <motion.button
-                whileHover={{ scale: 1.1, backgroundColor: "#fee2e2" }}
-                whileTap={{ scale: 0.9 }}
-                onClick={onDelete}
-                className="p-2 sm:p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                title="Delete task"
-                aria-label="Delete task"
-              >
-                <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
-                <span className="sr-only">Delete Task</span>
-              </motion.button>
-            </div>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.1, backgroundColor: "#fee2e2" }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onDelete}
+            className="p-2 sm:p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+            title="Delete task"
+            aria-label="Delete task"
+          >
+            <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
+            <span className="sr-only">Delete Task</span>
+          </motion.button>
         </div>
       </div>
     </motion.div>

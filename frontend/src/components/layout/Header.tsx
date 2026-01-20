@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -41,8 +46,13 @@ export default function Header() {
   }, []);
 
   const handleSignOut = async () => {
-    await authClient.signOut();
-    router.push("/sign-in");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in"); // redirect to login page
+        },
+      },
+    });
   };
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -50,47 +60,35 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-          ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm"
-          : "bg-transparent"
+        ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm"
+        : "bg-transparent"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/tasks" className="flex items-center space-x-2">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center"
+          {/* Left Side: Toggle & Logo */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onToggleSidebar}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all active:scale-95 text-gray-600 dark:text-gray-400"
+              aria-label="Toggle Sidebar"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
-              </div>
-              <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">TaskFlow</span>
-            </motion.div>
-          </Link>
+              <Menu className="w-6 h-6" />
+            </button>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/tasks"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-            >
-              Tasks
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center"
+              >
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <span className="text-white font-black text-xl">S</span>
+                </div>
+                <span className="ml-2 text-2xl font-black text-gray-900 dark:text-white tracking-tight hidden sm:block">StructDo</span>
+              </motion.div>
             </Link>
-            <Link
-              href="/tasks/completed"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-            >
-              Completed
-            </Link>
-            <Link
-              href="/analytics"
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium"
-            >
-              Analytics
-            </Link>
-          </nav>
+          </div>
 
           {/* Right side controls */}
           <div className="flex items-center space-x-4">

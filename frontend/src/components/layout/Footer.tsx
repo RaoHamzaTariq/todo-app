@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Github, Twitter, Mail, Heart } from "lucide-react";
+import Link from "next/link";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -12,69 +13,69 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
+                <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">TaskFlow</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">StructDo</span>
             </div>
             <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">
-              A modern task management application designed to boost your productivity.
+              A structured approach to task management designed for data-driven productivity.
             </p>
           </div>
 
-          {/* Product */}
+          {/* Application Links */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-              Product
+              Application
             </h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Features
-                </a>
+                <Link href="/dashboard" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Dashboard
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Pricing
-                </a>
+                <Link href="/tasks" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Tasks
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Integrations
-                </a>
+                <Link href="/calendar" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Calendar
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Updates
-                </a>
+                <Link href="/archive" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Archive
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Features */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
-              Support
+              Features
             </h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Help Center
-                </a>
+                <Link href="/analytics" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Analytics
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Contact Us
-                </a>
+                <Link href="/important" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Important
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Privacy Policy
-                </a>
+                <Link href="/tasks/completed" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Completed Tasks
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
-                  Terms of Service
-                </a>
+                <Link href="/settings" className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm">
+                  Settings
+                </Link>
               </li>
             </ul>
           </div>
@@ -86,7 +87,9 @@ export default function Footer() {
             </h3>
             <div className="flex space-x-4">
               <motion.a
-                href="#"
+                href="https://github.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ y: -3, scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -95,7 +98,9 @@ export default function Footer() {
                 <Github className="w-5 h-5" />
               </motion.a>
               <motion.a
-                href="#"
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 whileHover={{ y: -3, scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -104,7 +109,7 @@ export default function Footer() {
                 <Twitter className="w-5 h-5" />
               </motion.a>
               <motion.a
-                href="#"
+                href="mailto:support@structdo.example.com"
                 whileHover={{ y: -3, scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -119,7 +124,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-600 dark:text-gray-400 text-sm">
-            © {currentYear} TaskFlow. All rights reserved.
+            © {currentYear} StructDo. All rights reserved.
           </p>
           <div className="mt-4 md:mt-0 flex items-center space-x-2 text-gray-600 dark:text-gray-400 text-sm">
             <span>Made with</span>

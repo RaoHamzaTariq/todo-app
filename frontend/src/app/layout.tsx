@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TaskFlow",
-  description: "A modern, animated task management application",
+  title: "StructDo",
+  description: "A structured approach to task management for data-driven productivity",
 };
 
 export default function RootLayout({

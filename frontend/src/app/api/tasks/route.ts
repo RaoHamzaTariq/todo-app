@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     } else {
       // Session from cookies
-      userId = session.session.userId;
+      userId = session.session?.userId || session.user?.id;
     }
 
     if (!userId) {
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
     } else {
       // Session from cookies
-      userId = session.session.userId;
+      userId = session.session?.userId || session.user?.id;
     }
 
     if (!userId) {

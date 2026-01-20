@@ -50,7 +50,7 @@ export async function PATCH(
 
     } else {
       // Session from cookies
-      userId = session.session.userId || session.user?.id;
+      userId = session.session?.userId || session.user?.id;
     }
 
     if (!userId) {

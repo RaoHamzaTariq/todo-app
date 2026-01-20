@@ -5,6 +5,7 @@ All functions use user_id from JWT token (not from request body)
 to ensure strict user data isolation per Constitution Principle VI.
 """
 
+from datetime import datetime
 from typing import Optional, List
 
 from sqlmodel import Session, select
@@ -141,8 +142,9 @@ class TaskService:
         if starred is not None:
             task.is_starred = starred
 
-        task.updated_at = task.__class__.updated_at.field.get_default()()
+        task.updated_at = datetime.utcnow()
 
+        self.session.add(task)
         self.session.flush()
         self.session.refresh(task)
         return task
@@ -164,8 +166,9 @@ class TaskService:
 
         # Toggle completion status
         task.completed = not task.completed
-        task.updated_at = task.__class__.updated_at.field.get_default()()
+        task.updated_at = datetime.utcnow()
 
+        self.session.add(task)
         self.session.flush()
         self.session.refresh(task)
         return task
