@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Github, Twitter, Mail, Heart } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -12,10 +13,14 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">StructDo</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">StructDo</span> */}
+            <div className="flex justify-start">
+                              <Image src={"/StructDo Logo.png"} width={150} height={150} className="" alt="StructDo Logo"/>
+              
+            </div>
             </div>
             <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">
               A structured approach to task management designed for data-driven productivity.

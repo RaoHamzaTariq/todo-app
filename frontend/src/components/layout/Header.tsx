@@ -6,6 +6,7 @@ import { Menu, X, Sun, Moon, Bell, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import Image from "next/image";
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -82,10 +83,16 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center"
               >
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                {/* <div className="w-9 h-9 rounded-xl bg-linear-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
                   <span className="text-white font-black text-xl">S</span>
                 </div>
                 <span className="ml-2 text-2xl font-black text-gray-900 dark:text-white tracking-tight hidden sm:block">StructDo</span>
+               */}
+               <div className="">
+                
+                <Image src={"/StructDo Logo.png"} width={150} height={150} className="hidden sm:block" alt="StructDo Logo"/>
+                <Image src={"/StructDo Favicon Logo.png"} width={150} height={150} className="block sm:hidden" alt="StructDo Logo"/>
+               </div>
               </motion.div>
             </Link>
           </div>
@@ -115,7 +122,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
             {session?.user ? (
               <div className="relative group">
                 <button className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
                       {session.user.name?.charAt(0).toUpperCase() || 'U'}
                     </span>
@@ -124,7 +131,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
 
                 {/* Simple Hover Dropdown */}
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 min-w-[160px]">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 min-w-40">
                     <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 mb-1">
                       <p className="text-sm font-bold truncate">{session.user.name}</p>
                       <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
