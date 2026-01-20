@@ -21,9 +21,7 @@ services:
 
   # Backend Service
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: ./backend
     container_name: todo-app-backend
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/todo_db
@@ -37,7 +35,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-      - /app/backend/.venv
+      - /app/__pycache__
 
   # Frontend Service
   frontend:
