@@ -5,11 +5,8 @@ Configures the OpenAI Agent to work with MCP tools for task operations.
 Implements the integration patterns required by OpenAI Agents SDK following the skill guidelines.
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
-from agents import Agent, Runner
-from ..mcp.server import get_server
-from ..mcp.tools import register_mcp_tools
+from typing import Dict, Any
+from .integration import get_agent_integration
 
 
 class TodoChatAgent:
@@ -20,13 +17,14 @@ class TodoChatAgent:
     methods for processing natural language queries using MCP tools.
     """
 
-    def __init__(self):
+    def __init__(self, api_key: str = None):
         """
         Initialize the Todo Chat Agent following OpenAI Agents SDK patterns.
+
+        Args:
+            api_key: OpenAI API key (optional, will use environment if not provided)
         """
-        # Get the MCP server instance and register tools
-        self.mcp = get_server()
-        register_mcp_tools(self.mcp)
+        self.integration = get_agent_integration(api_key=api_key)
 
     async def process_query(self, user_id: str, query: str) -> Dict[str, Any]:
         """
@@ -39,42 +37,24 @@ class TodoChatAgent:
         Returns:
             Dictionary containing the agent's response
         """
-        try:
-            # Create the agent with instructions and tools
-            # The tools are registered with the FastMCP server instance
-            agent = Agent(
-                name="Todo Assistant",
-                instructions="You are a helpful task management assistant. Help users manage their tasks by creating, listing, updating, completing, and deleting tasks. Use the available tools to perform these operations. Always confirm important actions like deletions before proceeding. Be concise but friendly in your responses.",
-                # The tools are automatically available through the registered MCP server
-            )
-
-            # Use the Runner to execute the agent with the query
-            result = await Runner.run(agent, query)
-
-            return {
-                "response": result.final_output,
-                "success": True
-            }
-        except Exception as e:
-            return {
-                "response": f"I'm sorry, I encountered an error processing your request: {str(e)}",
-                "success": False,
-                "error": str(e)
-            }
+        return await self.integration.process_with_agent(user_id, query)
 
 
 # Global agent instance
 _todo_agent = None
 
 
-def get_agent() -> TodoChatAgent:
+def get_agent(api_key: str = None) -> TodoChatAgent:
     """
     Get the singleton instance of the Todo Chat Agent.
+
+    Args:
+        api_key: OpenAI API key (optional, will use environment if not provided)
 
     Returns:
         TodoChatAgent instance
     """
     global _todo_agent
     if _todo_agent is None:
-        _todo_agent = TodoChatAgent()
+        _todo_agent = TodoChatAgent(api_key=api_key)
     return _todo_agent

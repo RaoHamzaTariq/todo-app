@@ -60,8 +60,8 @@ async function mintBackendToken(userId: string) {
     .sign(secret);
 }
 
-// GET /api/chat/conversations
-export async function GET(request: NextRequest) {
+// GET /api/chat/[conversationId]/messages
+export async function GET(request: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
   try {
     const { userId, token, error, status } = await getUserId(request);
 
@@ -73,12 +73,14 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: 'User ID not found' }, { status: 401 });
     }
 
+    const { conversationId } = await params;
+
     // Mint a new JWT for the backend communication
     const backendToken = await mintBackendToken(userId);
 
     // Call your FastAPI backend with the JWT token
     const backendUrl = process.env.BACKEND_API_URL || 'http://127.0.0.1:8000';
-    const backendEndpoint = `${backendUrl}/api/${userId}/conversations`;
+    const backendEndpoint = `${backendUrl}/api/${userId}/conversations/${conversationId}/messages`;
 
     const response = await fetch(backendEndpoint, {
       method: 'GET',
@@ -104,7 +106,7 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
     return Response.json(data);
   } catch (error) {
-    console.error('Error in GET /api/chat/conversations:', error);
+    console.error('Error in GET /api/chat/[conversationId]/messages:', error);
     return Response.json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -112,8 +114,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/chat/conversations
-export async function POST(request: NextRequest) {
+// POST /api/chat/[conversationId]/messages
+export async function POST(request: NextRequest, { params }: { params: Promise<{ conversationId: string }> }) {
   try {
     const { userId, token, error, status } = await getUserId(request);
 
@@ -125,6 +127,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'User ID not found' }, { status: 401 });
     }
 
+    const { conversationId } = await params;
+
     // Mint a new JWT for the backend communication
     const backendToken = await mintBackendToken(userId);
 
@@ -132,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Call your FastAPI backend with the JWT token
     const backendUrl = process.env.BACKEND_API_URL || 'http://127.0.0.1:8000';
-    const backendEndpoint = `${backendUrl}/api/${userId}/conversations`;
+    const backendEndpoint = `${backendUrl}/api/${userId}/conversations/${conversationId}/messages`;
 
     const response = await fetch(backendEndpoint, {
       method: 'POST',
@@ -159,7 +163,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return Response.json(data);
   } catch (error) {
-    console.error('Error in POST /api/chat/conversations:', error);
+    console.error('Error in POST /api/chat/[conversationId]/messages:', error);
     return Response.json({
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error'

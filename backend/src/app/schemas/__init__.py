@@ -7,6 +7,16 @@ from src.app.schemas.task import (
     TaskListResponse,
 )
 from src.app.schemas.error import ErrorResponse, ValidationErrorResponse
+from src.app.schemas.chat import (
+    CreateConversationRequest,
+    CreateConversationResponse,
+    CreateMessageRequest,
+    CreateMessageResponse,
+    MessageResponse,
+    ConversationResponse,
+    ListMessagesResponse,
+    ListConversationsResponse,
+)
 
 __all__ = [
     "CreateTaskInput",
@@ -15,4 +25,12 @@ __all__ = [
     "TaskListResponse",
     "ErrorResponse",
     "ValidationErrorResponse",
+    "CreateConversationRequest",
+    "CreateConversationResponse",
+    "CreateMessageRequest",
+    "CreateMessageResponse",
+    "MessageResponse",
+    "ConversationResponse",
+    "ListMessagesResponse",
+    "ListConversationsResponse",
 ]

@@ -1,18 +1,33 @@
 """
-MCP server foundation with proper tool registration using FastMCP.
+MCP server for task operations using FastMCP.
 
-Implements the Model Context Protocol server for external tool integration.
+Implements the task management tools that can be called by the OpenAI agent.
+Based on the FastMCP quickstart example pattern.
 """
 
 from mcp.server.fastmcp import FastMCP
+import asyncio
+from .tools import register_mcp_tools
 
 
-# Initialize MCP server using FastMCP
+# Create an MCP server
 mcp = FastMCP(
-    name="todo-chatbot-mcp-server",
+    name="todo-task-mcp",
+    # Note: Not using stateless_http here since we're using stdio
 )
 
+# Register all tools
+mcp = register_mcp_tools(mcp)
 
-def get_server():
-    """Get the initialized MCP server instance."""
-    return mcp
+
+# Add a health check tool following MCP Builder patterns
+@mcp.tool()
+async def health_check() -> str:
+    """Check the health status of the MCP server"""
+    return "MCP server is running and healthy"
+
+
+# Run the server over stdio
+if __name__ == "__main__":
+    # This starts the MCP server reading/writing JSON messages over stdin/stdout
+    asyncio.run(mcp.run_stdio_async())

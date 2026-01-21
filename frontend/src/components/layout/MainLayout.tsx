@@ -7,10 +7,12 @@ import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import { FloatingChatWidget } from "../chat/FloatingChatWidget";
+import { authClient } from "@/lib/auth-client";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -27,6 +29,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // Get the authenticated user ID
+    const getUser = async () => {
+      try {
+        const user = await authClient.getSession();
+
+        if (user.data?.session?.userId) {
+          setUserId(user.data.session.userId);
+        } else {
+          // If user is not logged in, use a placeholder or hide the widget
+          setUserId(null);
+        }
+      } catch (error) {
+        console.error('Error getting user:', error);
+        setUserId(null);
+      }
+    };
+
+    getUser();
   }, []);
 
   const toggleSidebar = () => {
@@ -54,8 +77,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <Footer />
 
-      {/* Floating Chat Widget - appears on all pages */}
-      <FloatingChatWidget userId="current-user-id" />
+      {/* Floating Chat Widget - appears on all pages if user is authenticated */}
+      {userId && <FloatingChatWidget userId={userId} />}
 
       {/* Mobile menu button - only show if not chat widget */}
       {isMobile && (

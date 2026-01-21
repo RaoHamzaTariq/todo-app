@@ -17,36 +17,48 @@ interface FloatingChatWidgetProps {
 export const FloatingChatWidget = ({ userId, className = "" }: FloatingChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
-  const [conversationId] = useState<number>(1);
+  const [conversationId, setConversationId] = useState<number | null>(null);
+  const [initialMessages, setInitialMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [initialMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: "assistant",
-      content: "👋 Hello! I'm your AI task assistant. How can I help you achieve your goals today?",
-      createdAt: new Date(Date.now() - 300000).toISOString(),
-    },
-    {
-      id: 2,
-      role: "user",
-      content: "Can you help me create a task?",
-      createdAt: new Date(Date.now() - 240000).toISOString(),
-    },
-    {
-      id: 3,
-      role: "assistant",
-      content: "Absolutely! What would you like to name your task? I'm here to help you organize it effectively.",
-      createdAt: new Date(Date.now() - 180000).toISOString(),
-    },
-  ]);
+  // Function to create a new conversation
+  const createNewConversation = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        setConversationId(data.id);
+        return data.id;
+      } else {
+        console.error('Failed to create conversation:', await response.text());
+        // Show error to user and prevent further operations
+        alert('Failed to initialize chat. Please refresh the page and try again.');
+        setLoading(false);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      alert('Network error occurred while initializing chat. Please check your connection and try again.');
+      setLoading(false);
+      return null;
+    }
+  };
+
+  // Initialize conversation when widget opens
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasUnread(true);
-    }, 5000);
+    if (isOpen && !conversationId) {
+      createNewConversation();
+    }
+  }, [isOpen, conversationId]);
 
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <>
@@ -159,12 +171,21 @@ export const FloatingChatWidget = ({ userId, className = "" }: FloatingChatWidge
               </div>
 
               <div className="flex-1 overflow-hidden p-1">
-                <ChatContainer
-                  userId={userId}
-                  conversationId={conversationId}
-                  initialMessages={initialMessages}
-                  className="h-full rounded-xl"
-                />
+                {conversationId ? (
+                  <ChatContainer
+                    userId={userId}
+                    conversationId={conversationId}
+                    initialMessages={initialMessages}
+                    className="h-full rounded-xl"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-gray-500">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+                      <p>Setting up chat...</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

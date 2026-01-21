@@ -24,14 +24,73 @@ export const ChatContainer = ({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
 
+  // If conversationId is not provided, show a loading state
+  if (!conversationId) {
+    return (
+      <div className={`
+        flex flex-col h-full rounded-2xl overflow-hidden
+        bg-white/80 backdrop-blur-md
+        border border-white/50 shadow-2xl
+        dark:bg-gray-900/70 dark:border-white/10
+        transition-all duration-300 ease-out
+        ${className}
+      `}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p>Initializing conversation...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
-    if (initialMessages.length === 0) {
-      // In a real implementation, fetch conversation history
-      // fetch(`/api/${userId}/chat/${conversationId}`)
+    const fetchConversationHistory = async () => {
+      try {
+        // Include proper headers for authentication
+        const response = await fetch(`/api/chat/${conversationId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.messages && Array.isArray(data.messages)) {
+            setMessages(data.messages.map((msg: any) => ({
+              id: msg.id,
+              role: msg.role,
+              content: msg.content,
+              createdAt: msg.created_at,
+            })));
+          }
+        } else {
+          console.error("Failed to fetch conversation history:", response.statusText);
+          // For a new conversation, it's expected that there might be no messages initially
+          // Just initialize with an empty array
+          setMessages([]);
+        }
+      } catch (error) {
+        console.error("Error fetching conversation history:", error);
+        // Initialize with empty array on error
+        setMessages([]);
+      }
+    };
+
+    if (initialMessages.length === 0 && conversationId) {
+      fetchConversationHistory();
+    } else {
+      setMessages(initialMessages);
     }
   }, [userId, conversationId, initialMessages]);
 
   const handleSendMessage = async (content: string) => {
+    if (!conversationId) {
+      console.error("Cannot send message: No conversation ID available");
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
@@ -44,13 +103,29 @@ export const ChatContainer = ({
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Send message to backend API with proper headers
+      const response = await fetch(`/api/chat/${conversationId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error sending message:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const result = await response.json();
+
+      // Add the AI response to the messages
       const aiMessage: Message = {
-        id: Date.now() + 1,
+        id: result.id || Date.now() + 1,
         role: "assistant",
-        content: `I received your message: "${content}". How can I help you with your tasks?`,
-        createdAt: new Date().toISOString(),
+        content: result.content || "I received your message. How can I help you with your tasks?",
+        createdAt: result.created_at || new Date().toISOString(),
         status: "delivered"
       };
 
