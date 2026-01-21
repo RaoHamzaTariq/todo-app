@@ -1,38 +1,29 @@
-# Use Python 3.13 slim image as the base
 FROM python:3.13-slim
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
-# Set work directory
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         gcc \
         g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-
-# Install Python dependencies
+# Copy only backend code
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY . .
+COPY backend/ .
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Expose port (MCP typically uses different ports, but we'll expose common ones)
 EXPOSE 8001
 
-# Run the MCP server as a FastAPI app with uvicorn
-CMD ["uvicorn", "src.app.mcp.server:mcp_server", "--host", "0.0.0.0", "--port", "8001", "--reload"]
+CMD ["uvicorn", "src.app.mcp.server:mcp_server", "--host", "0.0.0.0", "--port", "8001"]
