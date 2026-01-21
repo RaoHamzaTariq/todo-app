@@ -11,3 +11,6 @@ pytest-asyncio
 psycopg2-binary
 bcrypt
 dotenv
+mcp[cli]
+openai-agents
+openai

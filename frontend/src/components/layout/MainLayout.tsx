@@ -6,10 +6,13 @@ import { Menu } from "lucide-react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
+import { FloatingChatWidget } from "../chat/FloatingChatWidget";
+import { authClient } from "@/lib/auth-client";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -26,6 +29,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // Get the authenticated user ID
+    const getUser = async () => {
+      try {
+        const user = await authClient.getSession();
+
+        if (user.data?.session?.userId) {
+          setUserId(user.data.session.userId);
+        } else {
+          // If user is not logged in, use a placeholder or hide the widget
+          setUserId(null);
+        }
+      } catch (error) {
+        console.error('Error getting user:', error);
+        setUserId(null);
+      }
+    };
+
+    getUser();
   }, []);
 
   const toggleSidebar = () => {
@@ -53,7 +77,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <Footer />
 
-      {/* Mobile menu button */}
+      {/* Floating Chat Widget - appears on all pages if user is authenticated */}
+      {userId && <FloatingChatWidget userId={userId} />}
+
+      {/* Mobile menu button - only show if not chat widget */}
       {isMobile && (
         <motion.button
           initial={{ opacity: 0, scale: 0 }}
@@ -62,7 +89,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={toggleSidebar}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg flex items-center justify-center"
+          className="fixed bottom-20 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg flex items-center justify-center"
           aria-label="Open menu"
         >
           <Menu className="w-6 h-6" />
