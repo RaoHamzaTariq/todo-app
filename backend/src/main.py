@@ -6,7 +6,7 @@ FastAPI server with SQLModel and JWT authentication
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from src.app.mcp.server import mcp_server
 from src.app.database import init_db
 from src.app.config import settings
 from src.app.routers import tasks
@@ -42,6 +42,8 @@ app.add_middleware(
 # Include routers
 app.include_router(tasks.router)
 app.include_router(chat.router)
+
+# app.mount("/mcp", mcp_server)
 
 
 @app.get("/health")

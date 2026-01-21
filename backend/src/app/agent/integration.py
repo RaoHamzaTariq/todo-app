@@ -9,7 +9,7 @@ import asyncio
 import os
 from typing import Dict, Any, Optional
 from agents import Agent, OpenAIChatCompletionsModel, Runner,RunConfig
-from agents.mcp import MCPServerStdio
+from agents.mcp import MCPServerStdio,MCPServerStreamableHttp,MCPServerStreamableHttpParams
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 load_dotenv()
@@ -46,6 +46,7 @@ class OpenAIAgentMCPIntegration:
         self.client = AsyncOpenAI(**kwargs)
         self.model = OpenAIChatCompletionsModel(model=model_name, openai_client=self.client)
         self.config = RunConfig(model=self.model,model_provider=self.client,tracing_disabled=True)
+        self.mcp_url = os.getenv("MCP_SERVER_URL")
 
     async def process_with_agent(self, user_id: str, query: str) -> Dict[str, Any]:
         """
@@ -60,14 +61,16 @@ class OpenAIAgentMCPIntegration:
         """
         try:
             # Create MCP server using stdio approach from sample code with extended timeout for production
-            async with MCPServerStdio(
-                name="TodoTaskMCP",
-                client_session_timeout_seconds=60,  # Increased timeout to 60 seconds for production
-                params={
-                    "command": "python",
-                    "args": ["-m", "src.app.mcp.server"],
-                },
-            ) as server:
+            mcp_params = MCPServerStreamableHttpParams(url=self.mcp_url)
+            async with MCPServerStreamableHttp(params=mcp_params, name="MySharedMCPServerClient") as mcp_server_client:
+            # async with MCPServerStdio(
+            #     name="TodoTaskMCP",
+            #     client_session_timeout_seconds=60,  # Increased timeout to 60 seconds for production
+            #     params={
+            #         "command": "python",
+            #         "args": ["-m", "src.app.mcp.server"],
+            #     },
+            # ) as server:
                 # # List available tools for debugging
                 # tools = await server.list_tools()
                 # print(f"Available tools: {tools}")
@@ -80,7 +83,7 @@ class OpenAIAgentMCPIntegration:
                     Use the available tools to perform these operations.
                     Always confirm important actions like deletions before proceeding.
                     Be concise but friendly in your responses.""",
-                    mcp_servers=[server],
+                    mcp_servers=[mcp_server_client],
                     model=self.model
                 )
 

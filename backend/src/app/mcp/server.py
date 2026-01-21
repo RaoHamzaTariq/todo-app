@@ -7,6 +7,7 @@ Based on the FastMCP quickstart example pattern.
 
 from mcp.server.fastmcp import FastMCP
 import asyncio
+from fastapi import APIRouter, HTTPException, Depends
 from .tools import register_mcp_tools
 
 
@@ -14,6 +15,7 @@ from .tools import register_mcp_tools
 mcp = FastMCP(
     name="todo-task-mcp",
     # Note: Not using stateless_http here since we're using stdio
+    stateless_http=True
 )
 
 # Register all tools
@@ -26,8 +28,11 @@ async def health_check() -> str:
     """Check the health status of the MCP server"""
     return "MCP server is running and healthy"
 
+mcp_server = mcp.streamable_http_app()
 
-# Run the server over stdio
+
+# Run the server over stdio when executed directly
 if __name__ == "__main__":
     # This starts the MCP server reading/writing JSON messages over stdin/stdout
     asyncio.run(mcp.run_stdio_async())
+
