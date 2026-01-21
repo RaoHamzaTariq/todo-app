@@ -1,4 +1,4 @@
-# Use Python 3.13 slim image as the base
+# Use Python 3.13 slim
 FROM python:3.13-slim
 
 # Set environment variables
@@ -6,34 +6,26 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
-# Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system deps
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        postgresql-client \
-        gcc \
-        g++ \
+        build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+# Copy requirements (to leverage cache)
+COPY backend/requirements.txt .
 
-# Install Python dependencies
+# Install Python deps
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY . .
+# Copy backend code
+COPY backend/ .
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
-USER appuser
-
-# Expose port
+# Expose the port your app listens on
 EXPOSE 8000
 
-# Run the application
+# Run the FastAPI backend
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
