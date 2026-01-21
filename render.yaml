@@ -5,7 +5,7 @@ services:
     env: docker
     dockerfilePath: backend/Dockerfile
 
-  - type: private_service
+  - type: web
     name: mcp-server
     plan: free
     env: docker
