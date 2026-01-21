@@ -48,12 +48,18 @@ export const ChatContainer = ({
   useEffect(() => {
     const fetchConversationHistory = async () => {
       try {
-        // Include proper headers for authentication
+        // Include proper headers for authentication and increased timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
         const response = await fetch(`/api/chat/${conversationId}`, {
           headers: {
             'Content-Type': 'application/json',
           },
+          signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = await response.json();

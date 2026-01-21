@@ -58,9 +58,8 @@ export const MessageBubble = ({
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
       >
-        <div className="whitespace-pre-wrap wrap-break-word text-sm sm:text-base leading-relaxed">
+        <div className="text-sm sm:text-base leading-relaxed">
           <ReactMarkdown
-  remarkPlugins={[remarkGfm]}
   components={{
     p: (props) => <p {...props} className="mb-2" />,
     h1: (props) => <h1 {...props} className="text-2xl font-bold mb-3 mt-4" />,
