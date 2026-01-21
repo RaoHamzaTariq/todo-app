@@ -59,10 +59,10 @@ class OpenAIAgentMCPIntegration:
             Dictionary containing the agent's response
         """
         try:
-            # Create MCP server using stdio approach from sample code
+            # Create MCP server using stdio approach from sample code with extended timeout for production
             async with MCPServerStdio(
                 name="TodoTaskMCP",
-                client_session_timeout_seconds=30,
+                client_session_timeout_seconds=60,  # Increased timeout to 60 seconds for production
                 params={
                     "command": "python",
                     "args": ["-m", "src.app.mcp.server"],
@@ -84,8 +84,11 @@ class OpenAIAgentMCPIntegration:
                     model=self.model
                 )
 
-                # Process the query using the agent
-                result = await Runner.run(agent, query, run_config=self.config)
+                # Process the query using the agent with extended timeout
+                result = await asyncio.wait_for(
+                    Runner.run(agent, query, run_config=self.config),
+                    timeout=60.0  # 60-second timeout for agent processing in production
+                )
                 print(result.final_output)
                 return {
                     "response": result.final_output,
@@ -94,6 +97,14 @@ class OpenAIAgentMCPIntegration:
                     "query": query
                 }
 
+        except asyncio.TimeoutError:
+            return {
+                "response": "I'm sorry, I encountered a timeout while processing your request. The response took too long to generate.",
+                "success": False,
+                "error": "Processing timeout",
+                "user_id": user_id,
+                "query": query
+            }
         except Exception as e:
             return {
                 "response": f"I'm sorry, I encountered an error processing your request: {str(e)}",

@@ -331,10 +331,10 @@ async def send_message(
     try:
         agent = get_agent()
 
-        # Wrap the agent call with a timeout to prevent indefinite hanging
+        # Wrap the agent call with an extended timeout to prevent indefinite hanging in production
         agent_response = await asyncio.wait_for(
             agent.process_query(auth_user["user_id"], request.content),
-            timeout=30.0  # 30-second timeout for agent processing
+            timeout=90.0  # 90-second timeout for agent processing in production
         )
 
         # Create the assistant's response message

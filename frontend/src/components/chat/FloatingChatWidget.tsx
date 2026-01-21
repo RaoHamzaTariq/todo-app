@@ -25,13 +25,20 @@ export const FloatingChatWidget = ({ userId, className = "" }: FloatingChatWidge
   const createNewConversation = async () => {
     setLoading(true);
     try {
+      // Create conversation with timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 1-minute timeout for conversation creation
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({}),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -44,9 +51,18 @@ export const FloatingChatWidget = ({ userId, className = "" }: FloatingChatWidge
         setLoading(false);
         return null;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating conversation:', error);
-      alert('Network error occurred while initializing chat. Please check your connection and try again.');
+      let errorMessage = 'Network error occurred while initializing chat. Please check your connection and try again.';
+
+      // Check if it's a timeout error
+      if (error.name === 'AbortError') {
+        errorMessage = 'Creating conversation timed out. Please try again.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Creating conversation timed out. Please try again.';
+      }
+
+      alert(errorMessage);
       setLoading(false);
       return null;
     }

@@ -50,7 +50,7 @@ export const ChatContainer = ({
       try {
         // Include proper headers for authentication and increased timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for production
 
         const response = await fetch(`/api/chat/${conversationId}`, {
           headers: {
@@ -109,14 +109,20 @@ export const ChatContainer = ({
     setIsLoading(true);
 
     try {
-      // Send message to backend API with proper headers
+      // Send message to backend API with proper headers and increased timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2-minute timeout for production
+
       const response = await fetch(`/api/chat/${conversationId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ content }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -136,12 +142,21 @@ export const ChatContainer = ({
       };
 
       setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
+      let errorMessageContent = "Sorry, I encountered an error processing your request.";
+
+      // Check if it's a timeout error
+      if (error.name === 'AbortError') {
+        errorMessageContent = "Sorry, the request timed out. The response took too long to generate.";
+      } else if (error.message?.includes('timeout')) {
+        errorMessageContent = "Sorry, the request timed out. The response took too long to generate.";
+      }
+
       const errorMessage: Message = {
         id: Date.now() + 1,
         role: "assistant",
-        content: "Sorry, I encountered an error processing your request.",
+        content: errorMessageContent,
         createdAt: new Date().toISOString(),
         status: "failed"
       };
