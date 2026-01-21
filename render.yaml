@@ -3,12 +3,10 @@ services:
     name: backend-api
     plan: free
     env: docker
-    rootDir: backend
     dockerfilePath: backend/Dockerfile
 
   - type: web
     name: mcp-server
     plan: free
     env: docker
-    rootDir: backend
     dockerfilePath: backend/Dockerfile.mcp
