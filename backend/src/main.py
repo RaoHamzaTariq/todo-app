@@ -49,7 +49,7 @@ app.include_router(chat.router)
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "version": "1.0.0"}
+    return {"status": "healthy", "version": "1.0.0" }
 
 
 @app.get("/")
