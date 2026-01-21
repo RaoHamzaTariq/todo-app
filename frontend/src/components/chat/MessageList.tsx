@@ -49,7 +49,7 @@ export const MessageList = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-full bg-linear-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 flex items-center justify-center mb-4">
             <MessageCircle className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           </div>
           <p className="text-gray-500 dark:text-gray-400 font-medium">No messages yet</p>

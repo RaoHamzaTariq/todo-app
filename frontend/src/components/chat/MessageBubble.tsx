@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from "../../lib/utils";
 import { CheckCheck, Check } from "lucide-react";
 import { messageEnter } from "@/lib/motion-variants";
@@ -49,15 +51,57 @@ export const MessageBubble = ({
           "max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 shadow-md",
           "backdrop-blur-sm border transition-all duration-200",
           isUser
-            ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-white/20 rounded-br-none ml-4"
+            ? "bg-linear-to-br from-blue-500 to-indigo-600 text-white border-white/20 rounded-br-none ml-4"
             : "bg-white/90 dark:bg-gray-800/90 text-gray-800 dark:text-gray-100 border-white/50 dark:border-white/10 rounded-bl-none mr-4"
         )}
         whileHover={{ scale: 1.02 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
       >
-        <div className="whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed">
-          {content}
+        <div className="whitespace-pre-wrap wrap-break-word text-sm sm:text-base leading-relaxed">
+          <ReactMarkdown
+  remarkPlugins={[remarkGfm]}
+  components={{
+    p: (props) => <p {...props} className="mb-2" />,
+    h1: (props) => <h1 {...props} className="text-2xl font-bold mb-3 mt-4" />,
+    h2: (props) => <h2 {...props} className="text-xl font-bold mb-2 mt-3" />,
+    h3: (props) => <h3 {...props} className="text-lg font-bold mb-2 mt-3" />,
+    ul: (props) => <ul {...props} className="list-disc list-inside mb-2 ml-4" />,
+    ol: (props) => <ol {...props} className="list-decimal list-inside mb-2 ml-4" />,
+    li: (props) => <li {...props} className="mb-1" />,
+    strong: (props) => <strong {...props} className="font-semibold" />,
+    em: (props) => <em {...props} className="italic" />,
+    code: (props) => (
+      <code
+        {...props}
+        className="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono"
+      />
+    ),
+    pre: (props) => (
+      <pre
+        {...props}
+        className="bg-gray-100 dark:bg-gray-700 p-3 rounded my-2 overflow-x-auto"
+      />
+    ),
+    blockquote: (props) => (
+      <blockquote
+        {...props}
+        className="border-l-4 border-blue-500 pl-4 italic text-gray-600 dark:text-gray-300"
+      />
+    ),
+    a: (props) => (
+      <a
+        {...props}
+        className="text-blue-600 hover:underline dark:text-blue-400"
+        target="_blank"
+        rel="noopener noreferrer"
+      />
+    ),
+  }}
+>
+  {content}
+</ReactMarkdown>
+
         </div>
 
         <motion.div

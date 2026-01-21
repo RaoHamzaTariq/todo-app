@@ -8,7 +8,7 @@ as demonstrated in the sample code.
 import asyncio
 import os
 from typing import Dict, Any, Optional
-from agents import Agent, OpenAIChatCompletionsModel, Runner
+from agents import Agent, OpenAIChatCompletionsModel, Runner,RunConfig
 from agents.mcp import MCPServerStdio
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
@@ -23,7 +23,7 @@ class OpenAIAgentMCPIntegration:
     error handling and resource management.
     """
 
-    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None, model_name: str = "moonshotai/kimi-k2-instruct"):
+    def __init__(self, api_key: Optional[str] = os.getenv("OPENAI_API_KEY"), base_url: Optional[str] = os.getenv("OPENAI_BASE_URL"), model_name: str = "moonshotai/kimi-k2-instruct"):
         """
         Initialize the OpenAI Agent MCP Integration.
 
@@ -45,6 +45,7 @@ class OpenAIAgentMCPIntegration:
 
         self.client = AsyncOpenAI(**kwargs)
         self.model = OpenAIChatCompletionsModel(model=model_name, openai_client=self.client)
+        self.config = RunConfig(model=self.model,model_provider=self.client,tracing_disabled=True)
 
     async def process_with_agent(self, user_id: str, query: str) -> Dict[str, Any]:
         """
@@ -67,9 +68,9 @@ class OpenAIAgentMCPIntegration:
                     "args": ["-m", "src.app.mcp.server"],
                 },
             ) as server:
-                # List available tools for debugging
-                tools = await server.list_tools()
-                print(f"Available tools: {tools}")
+                # # List available tools for debugging
+                # tools = await server.list_tools()
+                # print(f"Available tools: {tools}")
 
                 # Create agent with instructions and MCP server integration
                 agent = Agent(
@@ -84,8 +85,8 @@ class OpenAIAgentMCPIntegration:
                 )
 
                 # Process the query using the agent
-                result = await Runner.run(agent, query)
-
+                result = await Runner.run(agent, query, run_config=self.config)
+                print(result.final_output)
                 return {
                     "response": result.final_output,
                     "success": True,
