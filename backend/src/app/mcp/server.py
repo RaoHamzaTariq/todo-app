@@ -31,8 +31,3 @@ async def health_check() -> str:
 mcp_server = mcp.streamable_http_app()
 
 
-# Run the server over stdio when executed directly
-if __name__ == "__main__":
-    # This starts the MCP server reading/writing JSON messages over stdin/stdout
-    asyncio.run(mcp.run_stdio_async())
-

@@ -61,7 +61,8 @@ class OpenAIAgentMCPIntegration:
         """
         try:
             # Create MCP server using stdio approach from sample code with extended timeout for production
-            mcp_params = MCPServerStreamableHttpParams(url=self.mcp_url)
+            # mcp_params = MCPServerStreamableHttpParams(url=self.mcp_url)
+            mcp_params = MCPServerStreamableHttpParams(url="http://mcp-server:8001/mcp")
             async with MCPServerStreamableHttp(params=mcp_params, name="MySharedMCPServerClient") as mcp_server_client:
             # async with MCPServerStdio(
             #     name="TodoTaskMCP",
