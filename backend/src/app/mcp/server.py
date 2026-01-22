@@ -5,17 +5,23 @@ Implements the task management tools that can be called by the OpenAI agent.
 Based on the FastMCP quickstart example pattern.
 """
 
+import os
 from mcp.server.fastmcp import FastMCP
 import asyncio
-from fastapi import APIRouter, HTTPException, Depends
 from .tools import register_mcp_tools
+from mcp.server.transport_security import TransportSecuritySettings
 
+RENDER_HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "*.onrender.com")
 
 # Create an MCP server
 mcp = FastMCP(
     name="todo-task-mcp",
     # Note: Not using stateless_http here since we're using stdio
-    stateless_http=True
+    stateless_http=True,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[RENDER_HOST, "localhost", "127.0.0.1"]
+    )
 )
 
 # Register all tools
