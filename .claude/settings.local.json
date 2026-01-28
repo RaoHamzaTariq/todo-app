@@ -49,7 +49,8 @@
       "Bash(docker build -t todo-backend:latest -f backend/Dockerfile .)",
       "Bash(docker build -t mcp-server:latest -f mcp-server/Dockerfile .)",
       "Bash(minikube start --cpus=4 --memory=8192 --disk-size=20g)",
-      "Bash(timeout 10s cat \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--AI-Native-Projects-todo-app\\\\tasks\\\\b0f7854.output\")"
+      "Bash(timeout 10s cat \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--AI-Native-Projects-todo-app\\\\tasks\\\\b0f7854.output\")",
+      "Bash(docker version)"
     ]
   }
 }
