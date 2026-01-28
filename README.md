@@ -1,4 +1,4 @@
-# Todo App - Full Stack Application
+# Cloud-Native Todo App with AI Agent Integration
 
 A full-stack todo application featuring Next.js frontend with Better Auth authentication and FastAPI backend with PostgreSQL database.
 
@@ -166,6 +166,48 @@ Each task contains:
 - User data isolation (users can only access their own tasks)
 - Input validation
 - Protection against common web vulnerabilities
+
+## Cloud-Native Deployment
+
+This application is designed for cloud-native deployment to Kubernetes with AI-assisted DevOps operations. The deployment includes:
+
+- **Containerization**: Docker images for all services (frontend, backend, MCP server)
+- **Orchestration**: Helm Charts for simplified deployment and management
+- **Configuration Management**: Kubernetes ConfigMaps and Secrets for secure configuration
+- **AI-Assisted Operations**: Integration with kubectl-ai and kagent for intelligent operations
+- **Health Monitoring**: Liveness and readiness probes for all services
+- **Service Discovery**: Internal service communication via Kubernetes DNS
+
+### Kubernetes Deployment Prerequisites
+
+- Docker Desktop with Docker AI Gordon
+- Minikube (latest version)
+- kubectl
+- Helm 3+
+- kubectl-ai and kagent plugins
+
+### Deployment Guide
+
+For detailed deployment instructions, refer to the comprehensive deployment guide: `deploy-k8s-guide.md`
+
+The guide covers:
+- Environment setup and prerequisites
+- Building and loading container images
+- Deploying services in dependency order
+- Configuration management with ConfigMaps and Secrets
+- Verification and testing procedures
+- Troubleshooting and rollback procedures
+- AI-assisted operational commands
+
+### Success Criteria
+
+The deployment meets the following success criteria:
+- 99% uptime in local Minikube environment
+- Under 10-minute deployment time from clean slate
+- Natural language command support with 95% accuracy
+- Resource utilization within Minikube limits
+- All application features function identically post-deployment
+- Zero critical vulnerabilities in container images
 
 ## Development
 

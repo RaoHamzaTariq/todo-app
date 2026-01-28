@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-frontend.fullname" . }}-config
+  labels:
+    {{- include "todo-frontend.labels" . | nindent 4 }}
+data:
+  NEXT_PUBLIC_API_BASE_URL: {{ .Values.config.apiBaseUrl | default "http://todo-backend:8000" | quote }}
+  NEXT_PUBLIC_BETTER_AUTH_API_BASE_URL: {{ .Values.config.authBaseUrl | default "http://todo-frontend:3000/api/auth" | quote }}
+  ENVIRONMENT: {{ .Values.config.environment | default "production" | quote }}

@@ -1,0 +1,214 @@
+# API Contract: Phase IV Kubernetes Deployment
+
+## Overview
+
+This document defines the API contracts for the Kubernetes deployment of the Todo Chatbot application. The contracts cover the interactions between services within the Kubernetes cluster and the external interfaces.
+
+## Service APIs
+
+### Frontend Service API
+
+#### Public Endpoints
+- **Path**: `/` (root)
+  - **Method**: GET
+  - **Description**: Serves the Next.js application
+  - **Response**: HTML page with React components
+  - **Authentication**: None (handled by Next.js auth middleware)
+
+- **Path**: `/api/auth/*`
+  - **Method**: All methods
+  - **Description**: Better Auth endpoints
+  - **Response**: JSON with authentication data
+  - **Authentication**: None (these are auth endpoints)
+
+- **Path**: `/api/health`
+  - **Method**: GET
+  - **Description**: Health check for the frontend service
+  - **Response**: `{ "status": "healthy", "timestamp": "2026-01-26T10:00:00Z" }`
+  - **Authentication**: None
+
+### Backend Service API
+
+#### Health Check
+- **Path**: `/health`
+  - **Method**: GET
+  - **Description**: Health check for the backend service
+  - **Response**: `{ "status": "healthy", "timestamp": "2026-01-26T10:00:00Z" }`
+  - **Authentication**: None
+
+#### User-Specific Task Endpoints
+- **Path**: `/api/{user_id}/tasks/`
+  - **Method**: GET
+  - **Description**: List user's tasks
+  - **Parameters**:
+    - `user_id` (path): User identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Response**: `{ "tasks": [{"id": 1, "title": "Sample task", "completed": false}] }`
+  - **Authentication**: JWT required
+
+- **Path**: `/api/{user_id}/tasks/`
+  - **Method**: POST
+  - **Description**: Create new task
+  - **Parameters**:
+    - `user_id` (path): User identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Body**: `{ "title": "New task", "description": "Task description" }`
+  - **Response**: `{ "id": 123, "title": "New task", "description": "Task description", "completed": false }`
+  - **Authentication**: JWT required
+
+- **Path**: `/api/{user_id}/tasks/{task_id}`
+  - **Method**: GET
+  - **Description**: Get specific task
+  - **Parameters**:
+    - `user_id` (path): User identifier
+    - `task_id` (path): Task identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Response**: `{ "id": 123, "title": "Sample task", "description": "Task description", "completed": false }`
+  - **Authentication**: JWT required
+
+- **Path**: `/api/{user_id}/tasks/{task_id}`
+  - **Method**: PUT
+  - **Description**: Update task
+  - **Parameters**:
+    - `user_id` (path): User identifier
+    - `task_id` (path): Task identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Body**: `{ "title": "Updated task", "description": "Updated description" }`
+  - **Response**: `{ "id": 123, "title": "Updated task", "description": "Updated description", "completed": false }`
+  - **Authentication**: JWT required
+
+- **Path**: `/api/{user_id}/tasks/{task_id}`
+  - **Method**: DELETE
+  - **Description**: Delete task
+  - **Parameters**:
+    - `user_id` (path): User identifier
+    - `task_id` (path): Task identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Response**: `{ "success": true }`
+  - **Authentication**: JWT required
+
+#### Chat API
+- **Path**: `/api/{user_id}/chat`
+  - **Method**: POST
+  - **Description**: Primary chat endpoint (stateless)
+  - **Parameters**:
+    - `user_id` (path): User identifier
+  - **Headers**:
+    - `Authorization: Bearer {jwt_token}`
+  - **Body**: `{ "conversation_id": 12, "message": "Add a task to buy groceries" }`
+  - **Response**: `{ "conversation_id": 12, "response": "✅ I've added 'Buy groceries' to your tasks.", "tool_calls": [...] }`
+  - **Authentication**: JWT required
+
+### MCP Server API
+
+#### Registration Endpoints
+- **Path**: `/v1/tools/register`
+  - **Method**: POST
+  - **Description**: Register new tools with the MCP server
+  - **Headers**:
+    - `Content-Type: application/json`
+  - **Body**: Tool registration schema
+  - **Response**: `{ "success": true, "tool_id": "..." }`
+  - **Authentication**: None (internal service communication)
+
+- **Path**: `/v1/tools/list`
+  - **Method**: GET
+  - **Description**: List registered tools
+  - **Response**: Array of registered tools
+  - **Authentication**: None (internal service communication)
+
+#### Tool Execution
+- **Path**: `/v1/tools/execute`
+  - **Method**: POST
+  - **Description**: Execute a registered tool
+  - **Headers**:
+    - `Content-Type: application/json`
+  - **Body**: `{ "tool_id": "...", "arguments": {...} }`
+  - **Response**: Tool execution result
+  - **Authentication**: None (internal service communication)
+
+## Kubernetes Service Definitions
+
+### Frontend Service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-frontend
+  namespace: default
+spec:
+  selector:
+    app: todo-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: NodePort
+```
+
+### Backend Service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend
+  namespace: default
+spec:
+  selector:
+    app: todo-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+```
+
+### MCP Server Service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-server
+  namespace: default
+spec:
+  selector:
+    app: mcp-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+```
+
+## Health Check Specifications
+
+### Liveness Probes
+- **Frontend**: HTTP GET `/api/health` with 30s initial delay, 10s period
+- **Backend**: HTTP GET `/health` with 30s initial delay, 10s period
+- **MCP Server**: HTTP GET `/health` with 30s initial delay, 10s period
+
+### Readiness Probes
+- **Frontend**: HTTP GET `/api/health` with 5s initial delay, 5s period
+- **Backend**: HTTP GET `/health` with 5s initial delay, 5s period
+- **MCP Server**: HTTP GET `/health` with 5s initial delay, 5s period
+
+## Environment Variables
+
+### Backend Service
+- `DATABASE_URL`: PostgreSQL connection string
+- `BETTER_AUTH_SECRET`: JWT secret for authentication
+- `MCP_SERVER_URL`: URL for MCP server connection
+- `OPENAI_API_KEY`: API key for OpenAI integration
+
+### Frontend Service
+- `NEXT_PUBLIC_API_BASE_URL`: Base URL for backend API
+- `NEXT_PUBLIC_BETTER_AUTH_API_BASE_URL`: Base URL for Better Auth
+
+### MCP Server
+- `MCP_PORT`: Port for MCP server to listen on
+- `ALLOWED_ORIGINS`: Origins allowed to register tools
