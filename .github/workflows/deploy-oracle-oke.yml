@@ -1,0 +1,144 @@
+name: Deploy to Oracle Kubernetes Engine
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+  OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+  OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+  OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        source %USERPROFILE%\.cargo\env
+        uv --version
+
+    - name: Install dependencies
+      run: |
+        uv sync
+
+    - name: Setup OCI CLI
+      uses: oracle-actions/setup-oci-cli@v1
+      with:
+        tenancy-id: ${{ secrets.OCI_CLI_TENANCY }}
+        user-id: ${{ secrets.OCI_CLI_USER }}
+        region: ${{ secrets.OCI_CLI_REGION }}
+        private-key: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Configure kubectl for OKE
+      run: |
+        oci ce cluster create-kubeconfig --cluster-id ${{ secrets.OKE_CLUSTER_ID }} --file $HOME/.kube/config --region ${{ secrets.OCI_CLI_REGION }}
+
+    - name: Verify kubectl connection
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
+
+    - name: Build and Push Docker Images
+      run: |
+        # Login to OCIR (Oracle Cloud Infrastructure Registry)
+        echo ${{ secrets.OCI_CLI_AUTH_TOKEN }} | docker login ${OCIR_REGISTRY} -u ${OCI_CLI_USER} --password-stdin
+        
+        # Build and tag images
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/todo-backend:${{ github.sha }} ./backend
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/todo-frontend:${{ github.sha }} ./frontend
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/reminder-service:${{ github.sha }} ./event-services/reminder-service
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/recurring-task-service:${{ github.sha }} ./event-services/recurring-task-service
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/audit-log-service:${{ github.sha }} ./event-services/audit-log-service
+        docker build -t ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/notification-service:${{ github.sha }} ./event-services/notification-service
+        
+        # Push images
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/todo-backend:${{ github.sha }}
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/todo-frontend:${{ github.sha }}
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/reminder-service:${{ github.sha }}
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/recurring-task-service:${{ github.sha }}
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/audit-log-service:${{ github.sha }}
+        docker push ${OCIR_REGISTRY}/${OCI_CLI_TENANCY}/notification-service:${{ github.sha }}
+
+    - name: Update Helm values with image tags
+      run: |
+        # Create a temporary values file with the correct image tags
+        sed -i "s|tag: \"latest\"|tag: \"${{ github.sha }}\"|g" helm/todo-app/values.yaml
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: '3.12.0'
+
+    - name: Deploy using Helm
+      run: |
+        # Add the Dapr Helm repo and install Dapr
+        helm repo add dapr https://dapr.github.io/helm-charts/
+        helm repo update
+        helm upgrade --install dapr dapr/dapr --namespace dapr-system --create-namespace --wait
+        
+        # Deploy the application using Helm
+        helm upgrade --install todo-app ./helm/todo-app --namespace todo-app --create-namespace --wait --values helm/todo-app/values.yaml
+
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n todo-app
+        kubectl get services -n todo-app
+        kubectl rollout status deployment/todo-backend -n todo-app
+        kubectl rollout status deployment/todo-frontend -n todo-app
+        kubectl rollout status deployment/reminder-service -n todo-app
+        kubectl rollout status deployment/recurring-task-service -n todo-app
+        kubectl rollout status deployment/audit-log-service -n todo-app
+        kubectl rollout status deployment/notification-service -n todo-app
+
+    - name: Run health checks
+      run: |
+        # Wait for services to be available
+        sleep 30
+        
+        # Get the external IP of the frontend service
+        FRONTEND_IP=$(kubectl get svc todo-frontend -n todo-app -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        
+        if [ ! -z "$FRONTEND_IP" ]; then
+          echo "Frontend is accessible at: http://$FRONTEND_IP"
+          
+          # Simple health check
+          curl -f http://$FRONTEND_IP/health || exit 1
+        else
+          echo "Frontend service is not yet assigned an external IP"
+          kubectl get svc -n todo-app
+          exit 1
+        fi
+
+    - name: Slack Notification
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

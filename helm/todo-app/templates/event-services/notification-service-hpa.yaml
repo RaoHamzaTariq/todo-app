@@ -1,0 +1,33 @@
+{{- if .Values.eventServices.notification.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.notification-service.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: notification-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.notification-service.fullname" . }}
+  minReplicas: {{ .Values.eventServices.notification.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.eventServices.notification.autoscaling.maxReplicas }}
+  metrics:
+  {{- if .Values.eventServices.notification.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.eventServices.notification.autoscaling.targetCPUUtilizationPercentage }}
+  {{- end }}
+  {{- if .Values.eventServices.notification.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.eventServices.notification.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}

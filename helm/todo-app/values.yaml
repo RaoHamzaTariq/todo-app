@@ -1,0 +1,429 @@
+# Default values for todo-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Global configurations
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Dapr configuration
+dapr:
+  enabled: true
+  config: "dapr-config"
+  backend:
+    appId: "todo-backend"
+    appPort: 8000
+  frontend:
+    appId: "todo-frontend"
+    appPort: 3000
+  reminderService:
+    appId: "reminder-service"
+    appPort: 8001
+  recurringTaskService:
+    appId: "recurring-task-service"
+    appPort: 8002
+  auditLogService:
+    appId: "audit-log-service"
+    appPort: 8003
+  notificationService:
+    appId: "notification-service"
+    appPort: 8004
+
+# Kafka configuration
+kafka:
+  broker: "kafka:9092"
+
+# Backend service configuration
+backend:
+  replicaCount: 1
+  image:
+    repository: todo-backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  config:
+    databaseHost: "postgres-service"
+    databasePort: "5432"
+    databaseName: "tododb"
+    databaseUser: "postgres"
+    mcpServerUrl: "http://mcp-server:8080"
+    environment: "production"
+  secrets:
+    # Leave empty to generate random secrets, or provide your own
+    # jwtSecret: "your-jwt-secret-here"
+    # databasePassword: "your-db-password-here"
+
+# Frontend service configuration
+frontend:
+  replicaCount: 1
+  image:
+    repository: todo-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  imagePullSecrets: []
+  nameOverride: ""
+  fullnameOverride: ""
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  ingress:
+    enabled: false
+    className: ""
+    annotations: {}
+    hosts:
+      - host: chart-example.local
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Event services configurations
+eventServices:
+  # Reminder service configuration
+  reminder:
+    replicaCount: 1
+    image:
+      repository: reminder-service
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+    service:
+      type: ClusterIP
+      port: 8001
+      targetPort: 8001
+    resources:
+      limits:
+        cpu: 300m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8001
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8001
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  # Recurring task service configuration
+  recurringTask:
+    replicaCount: 1
+    image:
+      repository: recurring-task-service
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+    service:
+      type: ClusterIP
+      port: 8002
+      targetPort: 8002
+    resources:
+      limits:
+        cpu: 300m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8002
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8002
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  # Audit log service configuration
+  auditLog:
+    replicaCount: 1
+    image:
+      repository: audit-log-service
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+    service:
+      type: ClusterIP
+      port: 8003
+      targetPort: 8003
+    resources:
+      limits:
+        cpu: 300m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8003
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8003
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  # Notification service configuration
+  notification:
+    replicaCount: 1
+    image:
+      repository: notification-service
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    imagePullSecrets: []
+    nameOverride: ""
+    fullnameOverride: ""
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      fsGroup: 2000
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
+    service:
+      type: ClusterIP
+      port: 8004
+      targetPort: 8004
+    resources:
+      limits:
+        cpu: 300m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8004
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8004
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}

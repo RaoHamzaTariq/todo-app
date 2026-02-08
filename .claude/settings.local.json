@@ -50,7 +50,19 @@
       "Bash(docker build -t mcp-server:latest -f mcp-server/Dockerfile .)",
       "Bash(minikube start --cpus=4 --memory=8192 --disk-size=20g)",
       "Bash(timeout 10s cat \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--AI-Native-Projects-todo-app\\\\tasks\\\\b0f7854.output\")",
-      "Bash(docker version)"
+      "Bash(docker version)",
+      "Bash(powershell Compress-Archive -Path \".\\\\*\" -DestinationPath \"..\\\\event-architecture-skill.skill\" -Force)",
+      "Bash(powershell Compress-Archive -Path \".\\\\*\" -DestinationPath \"..\\\\event-architecture-skill.zip\" -Force)",
+      "Bash(ren \"event-architecture-skill.zip\" \"event-architecture-skill.skill\")",
+      "Bash(powershell Compress-Archive -Path \".\\\\*\" -DestinationPath \"..\\\\dapr-runtime-skill.zip\" -Force)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json \"/sp.specify\n\nYou are Claude Code operating in Spec-Driven Development mode.\n\nYour goal is to create a complete, high-level specification document \\(spec.md\\)\nfor **Phase V: Advanced Cloud Deployment** of the Todo Chatbot.\n\nThis specification must describe:\n\n### 1. Purpose and Motivation\n- Why we are advancing Phase V\n- What problems Phase V solves over Phase IV\n- Expected benefits of an event-driven, cloud-native system\n\n### 2. Scope\n- **Advanced features** the system must support:\n  - Recurring tasks engine\n  - Due dates & reminders\n  - Intermediate features: priorities, tags, search, filter, sort\n- **Event-Driven Architecture**:\n  - Kafka as backbone for:\n    - task-events\n    - reminders\n    - task updates\n    - audit logs\n  - Dapr integration for Pub/Sub, State, Jobs, Secrets, Service invocation\n- **Deployment Targets**:\n  - Local: Minikube with full Dapr and Kafka\n  - Cloud: Oracle Kubernetes Engine \\(OKE\\) – preferred\n  - Optional: GKE/AKS fallback \\(describe choice rationale\\)\n\n### 3. Behavioral Specification\n- User stories for advanced features\n- System contracts:\n  - Event schemas and service behavior\n  - What success looks like \\(KPIs: reliability, scalability, responsiveness\\)\n- Non-functional requirements:\n  - Scalability\n  - Observability\n  - Security\n  - Fault tolerance\n\n### 4. Architecture Overview\n- High-level components and interactions \\(logical diagram\\)\n- How event streams flow via Kafka + Dapr\n- Service decomposition\n- How clients interact with backend and event processors\n\n### 5. Constraints and Invariants\n- Use Dapr as abstraction layer \\(no direct Kafka SDK inside app code\\)\n- Leverage existing Phase IV Helm charts\n- CI/CD automation mandatory\n- Cloud provider: Oracle OKE \\(primary\\)\n  - OKE resource constraints\n  - Always Free tier\n- Compliance with updated Phase V Constitution\n\n### 6. Acceptance Criteria\n- What judges expect from a successful Phase V spec:\n  - Clear user stories covering all advanced features\n  - Kafka + Dapr architectural narrative\n  - Oracle cloud deployment expectations described\" --number 1 --short-name \"advanced-cloud-deployment\" \"Phase V: Advanced Cloud Deployment of the Todo Chatbot with event-driven architecture using Kafka and Dapr for Oracle Kubernetes Engine deployment\")",
+      "Bash(.specify/scripts/bash/setup-plan.sh:*)",
+      "Bash(git branch:*)",
+      "Bash(minikube status:*)",
+      "Bash(winget install:*)",
+      "Bash(dapr --version:*)",
+      "Bash(minikube ssh:*)",
+      "Bash(del:*)"
     ]
   }
 }

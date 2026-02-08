@@ -1,0 +1,33 @@
+{{- if .Values.eventServices.auditLog.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "todo-app.audit-log-service.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: audit-log-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "todo-app.audit-log-service.fullname" . }}
+  minReplicas: {{ .Values.eventServices.auditLog.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.eventServices.auditLog.autoscaling.maxReplicas }}
+  metrics:
+  {{- if .Values.eventServices.auditLog.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.eventServices.auditLog.autoscaling.targetCPUUtilizationPercentage }}
+  {{- end }}
+  {{- if .Values.eventServices.auditLog.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.eventServices.auditLog.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- end }}
+{{- end }}

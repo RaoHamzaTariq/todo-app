@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-app.frontend.fullname" . }}-config
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: frontend
+data:
+  next.config.json: |
+    {
+      "publicRuntimeConfig": {
+        "apiUrl": "{{ .Values.frontend.apiUrl }}",
+        "daprEnabled": {{ .Values.dapr.enabled }}
+      }
+    }

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "todo-app.backend.fullname" . }}-config
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: backend
+data:
+  settings.json: |
+    {
+      "database_url": "{{ .Values.backend.database.url }}",
+      "jwt_secret": "{{ .Values.backend.secrets.jwtSecret }}",
+      "dapr_enabled": {{ .Values.dapr.enabled }},
+      "environment": "{{ .Values.global.environment }}"
+    }

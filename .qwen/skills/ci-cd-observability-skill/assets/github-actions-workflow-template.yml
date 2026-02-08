@@ -1,0 +1,422 @@
+# GitHub Actions Workflow Template for Todo Chatbot
+#
+# This template provides a complete CI/CD pipeline for the Todo Chatbot application
+# with support for multiple environments and automated deployments.
+
+name: Todo Chatbot CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}/todo-frontend
+  IMAGE_NAME_BACKEND: ${{ github.repository }}/todo-backend
+  IMAGE_NAME_MCP: ${{ github.repository }}/mcp-server
+
+jobs:
+  # Code quality checks
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black mypy
+
+      - name: Lint Python code
+        run: |
+          flake8 backend/ --exclude=backend/__pycache__
+          black --check backend/
+
+      - name: Type check with mypy
+        run: |
+          mypy backend/
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Lint frontend code
+        run: |
+          cd frontend
+          npx eslint . --ext .ts,.tsx
+          npx tsc --noEmit
+
+  # Run tests
+  test:
+    needs: lint-and-validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run backend tests
+        run: |
+          pytest backend/tests/ --cov=backend --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+
+  # Security scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Build and push container images
+  build-and-push:
+    needs: [test, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    strategy:
+      matrix:
+        service: [frontend, backend, mcp-server]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_${{ matrix.service }} }}
+          tags: |
+            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ github.ref_name }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ${{ matrix.service == 'frontend' && './frontend' || '.' }}
+          file: ${{ matrix.service == 'frontend' && './frontend/Dockerfile' || format('./{0}/Dockerfile', matrix.service) }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to Development Environment
+  deploy-dev:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: development
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Configure KUBECONFIG for Dev
+        run: |
+          echo "${{ secrets.KUBECONFIG_DEV }}" | base64 -d > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Deploy Frontend to Dev
+        run: |
+          helm upgrade --install todo-frontend ./helm/todo-frontend \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=ClusterIP \
+            --set replicaCount=1 \
+            --namespace todo-dev --create-namespace \
+            --atomic \
+            --timeout 10m
+
+      - name: Deploy Backend to Dev
+        run: |
+          helm upgrade --install todo-backend ./helm/todo-backend \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=ClusterIP \
+            --set replicaCount=1 \
+            --set database.url="${{ secrets.DEV_DATABASE_URL }}" \
+            --set auth.secret="${{ secrets.DEV_AUTH_SECRET }}" \
+            --namespace todo-dev \
+            --atomic \
+            --timeout 10m
+
+      - name: Deploy MCP Server to Dev
+        run: |
+          helm upgrade --install mcp-server ./helm/mcp-server \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_MCP }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=ClusterIP \
+            --set replicaCount=1 \
+            --namespace todo-dev \
+            --atomic \
+            --timeout 10m
+
+      - name: Verify Dev Deployment
+        run: |
+          kubectl rollout status deployment/todo-frontend -n todo-dev --timeout=5m
+          kubectl rollout status deployment/todo-backend -n todo-dev --timeout=5m
+          kubectl rollout status deployment/mcp-server -n todo-dev --timeout=5m
+
+  # Deploy to Staging Environment
+  deploy-staging:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Configure KUBECONFIG for Staging
+        run: |
+          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Deploy with Blue-Green Strategy
+        run: |
+          # Generate unique deployment name
+          TIMESTAMP=$(date +%s)
+
+          # Deploy new version with timestamp
+          helm upgrade --install todo-frontend-${TIMESTAMP} ./helm/todo-frontend \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=ClusterIP \
+            --set replicaCount=2 \
+            --set deploymentLabels.deploymentId=${TIMESTAMP} \
+            --namespace todo-staging --create-namespace \
+            --atomic \
+            --timeout 10m
+
+          # Wait for new deployment to be ready
+          kubectl rollout status deployment/todo-frontend-${TIMESTAMP} -n todo-staging --timeout=5m
+
+          # Update service to point to new deployment
+          kubectl patch service todo-frontend-svc -n todo-staging -p '{"spec":{"selector":{"deploymentId":"'${TIMESTAMP}'"}}}'
+
+          # Clean up old deployments (keep last 2)
+          OLD_DEPLOYMENTS=$(kubectl get deployments -n todo-staging -l app=todo-frontend --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | tail -n +3)
+          for deployment in $OLD_DEPLOYMENTS; do
+            if [ ! -z "$deployment" ]; then
+              helm uninstall $deployment -n todo-staging || true
+            fi
+          done
+
+      - name: Run Staging Smoke Tests
+        run: |
+          # Wait for service to be ready
+          sleep 30
+
+          # Get service details
+          SERVICE_IP=$(kubectl get service todo-frontend-svc -n todo-staging -o jsonpath='{.spec.clusterIP}')
+
+          # Run basic health check
+          for i in {1..30}; do
+            if curl -f http://$SERVICE_IP:3000/health; then
+              echo "Staging health check passed"
+              break
+            fi
+            echo "Waiting for service to be ready... ($i/30)"
+            sleep 10
+          done
+
+          if [ $i -eq 30 ]; then
+            echo "Staging health check failed after 5 minutes"
+            exit 1
+          fi
+
+  # Deploy to Production Environment (requires manual trigger)
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[deploy]')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Configure KUBECONFIG for Production
+        run: |
+          echo "${{ secrets.KUBECONFIG_PROD }}" | base64 -d > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Canary deployment to Production
+        run: |
+          # Deploy 10% of traffic to new version initially
+          helm upgrade --install todo-frontend-canary ./helm/todo-frontend \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=LoadBalancer \
+            --set replicaCount=1 \
+            --set deploymentLabels.version=canary \
+            --set resources.requests.cpu=500m \
+            --set resources.requests.memory=1Gi \
+            --set resources.limits.cpu=1000m \
+            --set resources.limits.memory=2Gi \
+            --namespace todo-prod --create-namespace \
+            --atomic \
+            --timeout 10m
+
+          # Wait for canary to be ready
+          kubectl rollout status deployment/todo-frontend-canary -n todo-prod --timeout=5m
+
+          # Run canary tests
+          CANARY_SERVICE_IP=$(kubectl get service todo-frontend-canary-svc -n todo-prod -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || kubectl get service todo-frontend-canary-svc -n todo-prod -o jsonpath='{.spec.clusterIP}')
+
+          echo "Running canary tests against $CANARY_SERVICE_IP..."
+
+          # Run comprehensive tests against canary deployment
+          for i in {1..20}; do
+            if curl -f http://$CANARY_SERVICE_IP:3000/health; then
+              echo "Canary health check passed ($i/20)"
+            else
+              echo "Canary health check failed"
+              exit 1
+            fi
+            sleep 30
+          done
+
+          # If canary tests pass, promote to full deployment
+          echo "Canary tests passed, promoting to full deployment..."
+
+          helm upgrade --install todo-frontend ./helm/todo-frontend \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }} \
+            --set image.tag=${{ github.sha }} \
+            --set service.type=LoadBalancer \
+            --set replicaCount=3 \
+            --set resources.requests.cpu=500m \
+            --set resources.requests.memory=1Gi \
+            --set resources.limits.cpu=1000m \
+            --set resources.limits.memory=2Gi \
+            --set autoscaling.enabled=true \
+            --set autoscaling.minReplicas=3 \
+            --set autoscaling.maxReplicas=10 \
+            --namespace todo-prod \
+            --atomic \
+            --timeout 10m
+
+          # Wait for full deployment
+          kubectl rollout status deployment/todo-frontend -n todo-prod --timeout=10m
+
+          # Clean up canary deployment
+          helm uninstall todo-frontend-canary -n todo-prod || true
+
+      - name: Run Production Smoke Tests
+        run: |
+          # Get production service details
+          SERVICE_IP=$(kubectl get service todo-frontend-svc -n todo-prod -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || kubectl get service todo-frontend-svc -n todo-prod -o jsonpath='{.spec.clusterIP}')
+
+          echo "Running production smoke tests against $SERVICE_IP..."
+
+          # Run health check
+          if ! curl -f http://$SERVICE_IP:3000/health; then
+            echo "Production health check failed"
+            exit 1
+          fi
+
+          echo "Production deployment successful!"
+
+  # Post-deployment validation and monitoring setup
+  post-deploy-monitoring:
+    needs: [deploy-dev, deploy-staging, deploy-production]
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    steps:
+      - name: Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()

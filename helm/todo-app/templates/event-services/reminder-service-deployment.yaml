@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-app.reminder-service.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: reminder-service
+spec:
+  {{- if not .Values.eventServices.reminder.autoscaling.enabled }}
+  replicas: {{ .Values.eventServices.reminder.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "todo-app.selectorLabels" . | nindent 6 }}
+      app: reminder-service
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.dapr.enabled }}
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "{{ .Values.dapr.reminderService.appId }}"
+        dapr.io/app-port: "{{ .Values.dapr.reminderService.appPort }}"
+        dapr.io/config: "{{ .Values.dapr.config }}"
+        dapr.io/log-as-json: "true"
+        {{- end }}
+        {{- with .Values.eventServices.reminder.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "todo-app.selectorLabels" . | nindent 8 }}
+        app: reminder-service
+    spec:
+      {{- with .Values.eventServices.reminder.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "todo-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.eventServices.reminder.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-reminder-service
+          securityContext:
+            {{- toYaml .Values.eventServices.reminder.securityContext | nindent 12 }}
+          image: "{{ .Values.eventServices.reminder.image.repository }}:{{ .Values.eventServices.reminder.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.eventServices.reminder.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.eventServices.reminder.service.port }}
+              protocol: TCP
+          {{- if .Values.dapr.enabled }}
+          env:
+            - name: DAPR_HTTP_ENDPOINT
+              value: "http://localhost:3500"
+            - name: DAPR_GRPC_ENDPOINT
+              value: "http://localhost:50001"
+            - name: KAFKA_BROKER
+              value: {{ .Values.kafka.broker | quote }}
+            - name: KAFKA_CONSUMER_GROUP
+              value: "reminder-consumer-group"
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.eventServices.reminder.resources | nindent 12 }}
+      {{- with .Values.eventServices.reminder.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.eventServices.reminder.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.eventServices.reminder.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

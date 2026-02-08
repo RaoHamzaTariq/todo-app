@@ -1,0 +1,54 @@
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+  namespace: default
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.default.svc.cluster.local:9411/api/v2/spans"
+  metric:
+    enabled: true
+  httpPipeline:
+    handlers: []
+  accessControl:
+    defaultAction: allow
+    trustDomain: "pubsub-domain"
+    policies:
+    - appId: "backend"
+      defaultAction: allow
+      namespace: "default"
+      rules:
+      - name: allow-backend-to-all
+        match:
+          operation: "*"
+          httpVerb: ["*"]
+        action: allow
+    - appId: "reminder-service"
+      defaultAction: allow
+      namespace: "default"
+      rules:
+      - name: allow-reminder-to-backend
+        match:
+          operation: "*"
+          httpVerb: ["GET", "POST"]
+        action: allow
+    - appId: "recurring-task-service"
+      defaultAction: allow
+      namespace: "default"
+      rules:
+      - name: allow-recurring-to-backend
+        match:
+          operation: "*"
+          httpVerb: ["GET", "POST"]
+        action: allow
+    - appId: "audit-log-service"
+      defaultAction: allow
+      namespace: "default"
+      rules:
+      - name: allow-audit-to-all
+        match:
+          operation: "*"
+          httpVerb: ["POST"]
+        action: allow

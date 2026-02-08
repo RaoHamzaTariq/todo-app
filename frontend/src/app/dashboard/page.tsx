@@ -11,45 +11,117 @@ import {
     LayoutDashboard,
     ArrowRight,
     Zap,
-    TrendingUp
+    TrendingUp,
+    Repeat,
+    Bell,
+    Calendar,
+    Tag,
+    Filter,
+    Search,
+    MoreHorizontal
 } from "lucide-react";
 import { Task } from "@/types/task";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
+// Types for advanced features
+type RecurringTask = {
+    id: number;
+    title: string;
+    frequency: string;
+    nextOccurrence: Date;
+    active: boolean;
+};
+
+type Reminder = {
+    id: number;
+    taskId: number;
+    taskTitle: string;
+    reminderTime: Date;
+    sent: boolean;
+};
+
+type TagStat = {
+    name: string;
+    count: number;
+    color: string;
+};
+
 export default function DashboardPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [recurringTasks, setRecurringTasks] = useState<RecurringTask[]>([]);
+    const [reminders, setReminders] = useState<Reminder[]>([]);
     const [loading, setLoading] = useState(true);
     const { data: session } = authClient.useSession();
 
     useEffect(() => {
-        async function fetchTasks() {
-            try {
-                const response = await fetch("/api/tasks");
-                if (response.ok) {
-                    const data = await response.json();
-                    setTasks(Array.isArray(data.tasks) ? data.tasks : data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch tasks for dashboard", err);
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchTasks();
+        // Fetch all data for dashboard
+        Promise.all([
+            fetch("/api/tasks").then(res => res.json()),
+            fetch("/api/recurring-tasks").then(res => res.json()),
+            fetch("/api/reminders").then(res => res.json())
+        ]).then(([tasksData, recurringData, remindersData]) => {
+            setTasks(Array.isArray(tasksData.tasks) ? tasksData.tasks : tasksData);
+            setRecurringTasks(recurringData.recurringTasks || []);
+            setReminders(remindersData.reminders || []);
+        }).catch(err => {
+            console.error("Failed to fetch dashboard data", err);
+        }).finally(() => {
+            setLoading(false);
+        });
     }, []);
 
+    // Calculate stats
     const total = tasks.length;
     const completed = tasks.filter(t => t.completed).length;
     const pending = total - completed;
     const starred = tasks.filter(t => t.starred).length;
+    const recurringActive = recurringTasks.filter(rt => rt.active).length;
+    const upcomingReminders = reminders.filter(r => !r.sent).length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    // Calculate tag statistics
+    const tagStats: TagStat[] = [];
+    tasks.forEach(task => {
+        if (task.tags) {
+            const tags = task.tags.split(',').map(tag => tag.trim());
+            tags.forEach(tag => {
+                const existingTag = tagStats.find(ts => ts.name === tag);
+                if (existingTag) {
+                    existingTag.count++;
+                } else {
+                    tagStats.push({
+                        name: tag,
+                        count: 1,
+                        color: getRandomColor()
+                    });
+                }
+            });
+        }
+    });
+
+    // Helper function to get random colors for tags
+    function getRandomColor(): string {
+        const colors = [
+            'bg-red-100 text-red-800',
+            'bg-blue-100 text-blue-800',
+            'bg-green-100 text-green-800',
+            'bg-yellow-100 text-yellow-800',
+            'bg-purple-100 text-purple-800',
+            'bg-pink-100 text-pink-800',
+            'bg-indigo-100 text-indigo-800',
+            'bg-orange-100 text-orange-800',
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
 
     const stats = [
         { label: "Total Load", value: total, icon: BarChart3, color: "text-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", borderColor: "border-blue-100 dark:border-blue-900/40" },
         { label: "Finished", value: completed, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50 dark:bg-green-900/20", borderColor: "border-green-100 dark:border-green-900/40" },
         { label: "In Progress", value: pending, icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50 dark:bg-yellow-900/20", borderColor: "border-yellow-100 dark:border-yellow-900/40" },
         { label: "Critical", value: starred, icon: Star, color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20", borderColor: "border-purple-100 dark:border-purple-900/40" },
+        { label: "Recurring", value: recurringActive, icon: Repeat, color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/20", borderColor: "border-indigo-100 dark:border-indigo-900/40" },
+        { label: "Reminders", value: upcomingReminders, icon: Bell, color: "text-orange-600", bg: "bg-orange-50 dark:bg-orange-900/20", borderColor: "border-orange-100 dark:border-orange-900/40" },
     ];
 
     if (loading) return (
@@ -79,20 +151,33 @@ export default function DashboardPage() {
                     </p>
                 </motion.div>
 
-                <Link href="/tasks/new">
-                    <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-2xl font-black shadow-2xl hover:shadow-blue-500/20 transition-all text-sm uppercase tracking-widest"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Create New Task
-                    </motion.button>
-                </Link>
+                <div className="flex gap-4">
+                    <Link href="/tasks/new">
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-4 rounded-2xl font-black shadow-2xl hover:shadow-blue-500/20 transition-all text-sm uppercase tracking-widest"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Create New Task
+                        </motion.button>
+                    </Link>
+                    
+                    <Link href="/tasks/recurring">
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="flex items-center gap-3 bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black shadow-lg hover:shadow-indigo-500/20 transition-all text-sm"
+                        >
+                            <Repeat className="w-5 h-5" />
+                            Recurring Tasks
+                        </motion.button>
+                    </Link>
+                </div>
             </header>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-12">
                 {stats.map((stat, index) => (
                     <motion.div
                         key={stat.label}
@@ -121,7 +206,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-500 rounded-xl shadow-lg shadow-blue-500/20">
-                                <Zap className="w-5 h-5 text-white" />
+                                <Zap className="w-5 h-5" />
                             </div>
                             <h3 className="text-xl font-black text-gray-900 dark:text-white">Active Objectives</h3>
                         </div>
@@ -147,16 +232,32 @@ export default function DashboardPage() {
                                         <span className="block text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
                                             {task.title}
                                         </span>
-                                        <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
-                                            Due Today • {task.priority} Priority
-                                        </span>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {task.dueDate && (
+                                                <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider flex items-center gap-1">
+                                                    <Calendar className="w-3 h-3" /> Due {new Date(task.dueDate).toLocaleDateString()}
+                                                </span>
+                                            )}
+                                            <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
+                                                {task.priority} Priority
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                {task.starred && (
-                                    <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-                                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                    </div>
-                                )}
+                                
+                                <div className="flex items-center gap-2">
+                                    {task.tags && task.tags.split(',').map((tag, idx) => (
+                                        <span key={idx} className={`text-[10px] px-2 py-1 rounded-full ${getRandomColor()}`}>
+                                            {tag.trim()}
+                                        </span>
+                                    ))}
+                                    
+                                    {task.starred && (
+                                        <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         ))}
                         {tasks.filter(t => !t.completed).length === 0 && (
@@ -167,55 +268,133 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Right Column: Mini Stats Card */}
+                {/* Right Column: Advanced Features */}
                 <div className="flex flex-col gap-8">
-                    {/* Productivity Chart Card */}
-                    <div className="p-8 bg-gradient-to-br from-indigo-600 to-purple-800 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20 text-white relative overflow-hidden group">
-                        <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 blur-[80px] rounded-full group-hover:scale-150 transition-transform duration-700" />
-
-                        <div className="relative z-10">
-                            <h3 className="text-lg font-black uppercase tracking-widest mb-2 opacity-80">Progress Score</h3>
-                            <div className="flex items-end gap-2 mb-6">
-                                <span className="text-6xl font-black leading-none">{completionRate}</span>
-                                <span className="text-xl font-bold mb-1 opacity-60">%</span>
+                    {/* Upcoming Reminders */}
+                    <div className="bg-white dark:bg-gray-800/40 backdrop-blur-xl p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Bell className="w-5 h-5 text-orange-500" />
+                                <h3 className="font-black text-gray-900 dark:text-white">Upcoming Reminders</h3>
                             </div>
-
-                            <div className="h-3 w-full bg-white/10 rounded-full mb-8 overflow-hidden">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${completionRate}%` }}
-                                    transition={{ duration: 1.5, ease: "easeOut" }}
-                                    className="h-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
-                                />
-                            </div>
-
-                            <p className="text-sm font-medium leading-relaxed opacity-90 mb-8 font-light">
-                                Your journey is evolving. Every completed task brings you closer to your ultimate objective.
-                            </p>
-
-                            <Link href="/analytics">
-                                <button className="w-full py-4 bg-white/10 backdrop-blur-md rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2">
-                                    Insight Details <ArrowRight className="w-4 h-4" />
-                                </button>
+                            <Link href="/settings/reminders">
+                                <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                             </Link>
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {reminders.slice(0, 3).map(reminder => (
+                                <div key={reminder.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{reminder.taskTitle}</p>
+                                        <p className="text-xs text-gray-500">{new Date(reminder.reminderTime).toLocaleString()}</p>
+                                    </div>
+                                    <div className={`w-3 h-3 rounded-full ${reminder.sent ? 'bg-green-500' : 'bg-orange-500'}`} />
+                                </div>
+                            ))}
+                            
+                            {reminders.length === 0 && (
+                                <p className="text-sm text-gray-500 text-center py-4">No upcoming reminders</p>
+                            )}
                         </div>
                     </div>
 
-                    {/* Quick Insight Card */}
-                    <Link href="/important" className="group">
-                        <div className="p-6 bg-white dark:bg-gray-800/40 backdrop-blur-xl rounded-[2rem] border border-gray-100 dark:border-gray-700/50 shadow-sm flex items-center justify-between group-hover:border-purple-500/50 transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="p-4 bg-purple-50 dark:bg-purple-900/20 text-purple-500 rounded-2xl group-hover:rotate-6 transition-transform">
-                                    <Star className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Focus List</p>
-                                    <p className="text-lg font-black text-gray-900 dark:text-white leading-none mt-1">{starred} Critical Items</p>
-                                </div>
+                    {/* Recurring Tasks */}
+                    <div className="bg-white dark:bg-gray-800/40 backdrop-blur-xl p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Repeat className="w-5 h-5 text-indigo-500" />
+                                <h3 className="font-black text-gray-900 dark:text-white">Recurring Tasks</h3>
                             </div>
-                            <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition-colors" />
+                            <Link href="/tasks/recurring">
+                                <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                            </Link>
                         </div>
-                    </Link>
+                        
+                        <div className="space-y-3">
+                            {recurringTasks.slice(0, 3).map(rt => (
+                                <div key={rt.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{rt.title}</p>
+                                        <p className="text-xs text-gray-500 capitalize">{rt.frequency} • {rt.active ? 'Active' : 'Inactive'}</p>
+                                    </div>
+                                    <div className={`w-3 h-3 rounded-full ${rt.active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                </div>
+                            ))}
+                            
+                            {recurringTasks.length === 0 && (
+                                <p className="text-sm text-gray-500 text-center py-4">No recurring tasks</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tag Distribution */}
+                    <div className="bg-white dark:bg-gray-800/40 backdrop-blur-xl p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700/50 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Tag className="w-5 h-5 text-purple-500" />
+                                <h3 className="font-black text-gray-900 dark:text-white">Popular Tags</h3>
+                            </div>
+                            <Filter className="w-4 h-4 text-gray-400" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {tagStats.slice(0, 5).map((tagStat, index) => (
+                                <div key={index} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-[10px] px-2 py-1 rounded-full ${tagStat.color}`}>
+                                            {tagStat.name}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-gray-500">{tagStat.count}</span>
+                                </div>
+                            ))}
+                            
+                            {tagStats.length === 0 && (
+                                <p className="text-sm text-gray-500 text-center py-2">No tags available</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Productivity Chart Card */}
+            <div className="mt-8 p-8 bg-gradient-to-br from-indigo-600 to-purple-800 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20 text-white relative overflow-hidden group">
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 blur-[80px] rounded-full group-hover:scale-150 transition-transform duration-700" />
+
+                <div className="relative z-10">
+                    <h3 className="text-lg font-black uppercase tracking-widest mb-2 opacity-80">Progress Score</h3>
+                    <div className="flex items-end gap-2 mb-6">
+                        <span className="text-6xl font-black leading-none">{completionRate}</span>
+                        <span className="text-xl font-bold mb-1 opacity-60">%</span>
+                    </div>
+
+                    <div className="h-3 w-full bg-white/10 rounded-full mb-8 overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${completionRate}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                        />
+                    </div>
+
+                    <p className="text-sm font-medium leading-relaxed opacity-90 mb-8 font-light">
+                        Your journey is evolving. Every completed task brings you closer to your ultimate objective.
+                    </p>
+
+                    <div className="flex gap-4">
+                        <Link href="/analytics">
+                            <button className="py-4 bg-white/10 backdrop-blur-md rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2 w-full">
+                                Insight Details <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </Link>
+                        
+                        <Link href="/calendar">
+                            <button className="py-4 bg-white/10 backdrop-blur-md rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2 w-full">
+                                Calendar View <Calendar className="w-4 h-4" />
+                            </button>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

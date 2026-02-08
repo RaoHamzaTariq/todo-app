@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "todo-app.reminder-service.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: reminder-service
+spec:
+  type: {{ .Values.eventServices.reminder.service.type }}
+  ports:
+    - port: {{ .Values.eventServices.reminder.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "todo-app.selectorLabels" . | nindent 4 }}
+    app: reminder-service

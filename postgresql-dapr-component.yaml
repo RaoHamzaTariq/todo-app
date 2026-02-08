@@ -1,0 +1,19 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: postgresql-state
+  namespace: default
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+  - name: connectionString
+    value: "host=postgresql-db.default.svc.cluster.local user=postgres password=password123 dbname=todoapp port=5432 sslmode=disable"
+  - name: versionColumnType
+    value: "dapr_version"
+  - name: valueColumnName
+    value: "dapr_value"
+  - name: keyColumnName
+    value: "dapr_key"
+  - name: tableName
+    value: "dapr_store"

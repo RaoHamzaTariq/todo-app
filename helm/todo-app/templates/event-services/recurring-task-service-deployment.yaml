@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-app.recurring-task-service.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: recurring-task-service
+spec:
+  {{- if not .Values.eventServices.recurringTask.autoscaling.enabled }}
+  replicas: {{ .Values.eventServices.recurringTask.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "todo-app.selectorLabels" . | nindent 6 }}
+      app: recurring-task-service
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.dapr.enabled }}
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "{{ .Values.dapr.recurringTaskService.appId }}"
+        dapr.io/app-port: "{{ .Values.dapr.recurringTaskService.appPort }}"
+        dapr.io/config: "{{ .Values.dapr.config }}"
+        dapr.io/log-as-json: "true"
+        {{- end }}
+        {{- with .Values.eventServices.recurringTask.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "todo-app.selectorLabels" . | nindent 8 }}
+        app: recurring-task-service
+    spec:
+      {{- with .Values.eventServices.recurringTask.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "todo-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.eventServices.recurringTask.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-recurring-task-service
+          securityContext:
+            {{- toYaml .Values.eventServices.recurringTask.securityContext | nindent 12 }}
+          image: "{{ .Values.eventServices.recurringTask.image.repository }}:{{ .Values.eventServices.recurringTask.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.eventServices.recurringTask.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.eventServices.recurringTask.service.port }}
+              protocol: TCP
+          {{- if .Values.dapr.enabled }}
+          env:
+            - name: DAPR_HTTP_ENDPOINT
+              value: "http://localhost:3500"
+            - name: DAPR_GRPC_ENDPOINT
+              value: "http://localhost:50001"
+            - name: KAFKA_BROKER
+              value: {{ .Values.kafka.broker | quote }}
+            - name: KAFKA_CONSUMER_GROUP
+              value: "recurring-task-consumer-group"
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.eventServices.recurringTask.resources | nindent 12 }}
+      {{- with .Values.eventServices.recurringTask.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.eventServices.recurringTask.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.eventServices.recurringTask.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
