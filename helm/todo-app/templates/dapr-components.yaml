@@ -1,0 +1,123 @@
+{{- if .Values.daprComponents.kafkaPubSub.enabled }}
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kafka-pubsub
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+  - name: brokers
+    value: {{ .Values.daprComponents.kafkaPubSub.brokers | quote }}
+  - name: consumerGroup
+    value: {{ .Values.daprComponents.kafkaPubSub.consumerGroup | quote }}
+  - name: clientID
+    value: {{ .Values.daprComponents.kafkaPubSub.clientID | quote }}
+  - name: authRequired
+    value: {{ .Values.daprComponents.kafkaPubSub.authRequired | quote }}
+{{- end }}
+
+{{- if .Values.daprComponents.postgresStateStore.enabled }}
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: postgres-statestore
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+  - name: connectionString
+    value: {{ .Values.daprComponents.postgresStateStore.connectionString | quote }}
+  - name: actorStateStore
+    value: {{ .Values.daprComponents.postgresStateStore.actorStateStore | quote }}
+{{- end }}
+
+{{- if .Values.daprComponents.cronBinding.enabled }}
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: cron-binding
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: bindings.cron
+  version: v1
+  metadata:
+  - name: schedule
+    value: {{ .Values.daprComponents.cronBinding.schedule | quote }}
+{{- end }}
+
+{{- if .Values.daprComponents.kubernetesSecretStore.enabled }}
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: kubernetes-secret-store
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: secretstores.kubernetes
+  version: v1
+  metadata: []
+{{- end }}
+
+{{/*
+Dapr Configuration
+*/}}
+---
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+  namespace: {{ .Release.Namespace }}
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin.{{ .Release.Namespace }}.svc.cluster.local:9411/api/v2/spans"
+  metric:
+    enabled: true
+  httpPipeline:
+    handlers: []
+  accessControl:
+    defaultAction: allow
+    trustDomain: "pubsub-domain"
+    policies:
+    - appId: "backend"
+      defaultAction: allow
+      namespace: {{ .Release.Namespace | quote }}
+      rules:
+      - name: allow-backend-to-all
+        match:
+          operation: "*"
+          httpVerb: ["*"]
+        action: allow
+    - appId: "reminder-service"
+      defaultAction: allow
+      namespace: {{ .Release.Namespace | quote }}
+      rules:
+      - name: allow-reminder-to-backend
+        match:
+          operation: "*"
+          httpVerb: ["GET", "POST"]
+        action: allow
+    - appId: "recurring-task-service"
+      defaultAction: allow
+      namespace: {{ .Release.Namespace | quote }}
+      rules:
+      - name: allow-recurring-to-backend
+        match:
+          operation: "*"
+          httpVerb: ["GET", "POST"]
+        action: allow
+    - appId: "audit-log-service"
+      defaultAction: allow
+      namespace: {{ .Release.Namespace | quote }}
+      rules:
+      - name: allow-audit-to-all
+        match:
+          operation: "*"
+          httpVerb: ["POST"]
+        action: allow

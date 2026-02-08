@@ -99,6 +99,7 @@ todo-app/
 │   │   │   ├── config.py            # Environment configuration
 │   │   │   ├── middleware/          # Authentication middleware
 │   │   │   ├── models/              # SQLModel database models
+│   │   │   ├── mcp/                 # MCP Server
 │   │   │   ├── schemas/             # Pydantic schemas
 │   │   │   ├── services/            # Business logic
 │   │   │   └── routers/             # API route handlers

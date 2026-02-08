@@ -6,26 +6,13 @@ metadata:
     {{- include "todo-app.labels" . | nindent 4 }}
     app: frontend
 spec:
-  {{- if not .Values.frontend.autoscaling.enabled }}
   replicas: {{ .Values.frontend.replicaCount }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "todo-app.selectorLabels" . | nindent 6 }}
       app: frontend
   template:
     metadata:
-      annotations:
-        {{- if .Values.dapr.enabled }}
-        dapr.io/enabled: "true"
-        dapr.io/app-id: "{{ .Values.dapr.frontend.appId }}"
-        dapr.io/app-port: "{{ .Values.dapr.frontend.appPort }}"
-        dapr.io/config: "{{ .Values.dapr.config }}"
-        dapr.io/log-as-json: "true"
-        {{- end }}
-        {{- with .Values.frontend.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       labels:
         {{- include "todo-app.selectorLabels" . | nindent 8 }}
         app: frontend
@@ -45,27 +32,44 @@ spec:
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.frontend.service.port }}
+              containerPort: 3000
               protocol: TCP
           env:
             - name: NEXT_PUBLIC_API_URL
-              value: {{ .Values.frontend.apiUrl }}
-            - name: NEXT_PUBLIC_DAPR_ENABLED
-              value: {{ .Values.dapr.enabled | quote }}
+              value: {{ .Values.frontend.env.NEXT_PUBLIC_API_URL | quote }}
+            - name: NEXT_PUBLIC_MCP_SERVER_URL
+              value: {{ .Values.frontend.env.NEXT_PUBLIC_MCP_SERVER_URL | quote }}
+            - name: NEXT_PUBLIC_DAPR_HTTP_ENDPOINT
+              value: {{ .Values.frontend.env.NEXT_PUBLIC_DAPR_HTTP_ENDPOINT | quote }}
+            - name: NEXT_PUBLIC_KAFKA_BROKER
+              value: {{ .Values.frontend.env.NEXT_PUBLIC_KAFKA_BROKER | quote }}
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: secret
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /api/ready
+              path: /
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- with .Values.frontend.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.frontend.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.frontend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -78,3 +82,84 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "todo-app.frontend.fullname" . }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: frontend
+spec:
+  type: {{ .Values.frontend.service.type }}
+  ports:
+    - port: {{ .Values.frontend.service.port }}
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "todo-app.selectorLabels" . | nindent 4 }}
+    app: frontend
+---
+{{- if .Values.frontend.ingress.enabled -}}
+{{- $fullName := include "todo-app.frontend.fullname" . -}}
+{{- $svcPort := .Values.frontend.service.port -}}
+{{- if and .Values.frontend.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.frontend.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.frontend.ingress.annotations "kubernetes.io/ingress.class" .Values.frontend.ingress.className}}
+  {{- end }}
+{{- end }}
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1
+{{- else if semverCompare ">=1.14-0-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "todo-app.labels" . | nindent 4 }}
+    app: frontend
+  {{- with .Values.frontend.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and .Values.frontend.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
+  ingressClassName: {{ .Values.frontend.ingress.className }}
+  {{- end }}
+  {{- if .Values.frontend.ingress.tls }}
+  tls:
+    {{- range .Values.frontend.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.frontend.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+  {{- end }}
