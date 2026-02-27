@@ -15,10 +15,10 @@ from dapr.ext.grpc import App, InvokeMethodRequest
 import aiokafka
 from sqlmodel import Session
 
-from ...models.reminder_model import Reminder
-from ...services.email_service import EmailService
-from ...services.sms_service import SMSService
-from ...services.push_service import PushService
+from backend.src.models.reminder_model import Reminder
+from .email_service import EmailService
+from .sms_service import SMSService
+from .push_service import PushService
 
 
 @dataclass

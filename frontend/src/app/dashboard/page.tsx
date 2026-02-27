@@ -83,8 +83,8 @@ export default function DashboardPage() {
     // Calculate tag statistics
     const tagStats: TagStat[] = [];
     tasks.forEach(task => {
-        if (task.tags) {
-            const tags = task.tags.split(',').map(tag => tag.trim());
+        if (task.tags && Array.isArray(task.tags)) {
+            const tags = task.tags.map(tag => tag.trim());
             tags.forEach(tag => {
                 const existingTag = tagStats.find(ts => ts.name === tag);
                 if (existingTag) {
@@ -162,7 +162,7 @@ export default function DashboardPage() {
                             Create New Task
                         </motion.button>
                     </Link>
-                    
+
                     <Link href="/tasks/recurring">
                         <motion.button
                             whileHover={{ scale: 1.02, y: -2 }}
@@ -233,9 +233,9 @@ export default function DashboardPage() {
                                             {task.title}
                                         </span>
                                         <div className="flex items-center gap-2 mt-1">
-                                            {task.dueDate && (
+                                            {task.due_date && (
                                                 <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" /> Due {new Date(task.dueDate).toLocaleDateString()}
+                                                    <Calendar className="w-3 h-3" /> Due {new Date(task.due_date).toLocaleDateString()}
                                                 </span>
                                             )}
                                             <span className="text-[10px] uppercase font-black text-gray-400 tracking-wider">
@@ -244,14 +244,14 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center gap-2">
-                                    {task.tags && task.tags.split(',').map((tag, idx) => (
+                                    {task.tags && Array.isArray(task.tags) && task.tags.map((tag, idx) => (
                                         <span key={idx} className={`text-[10px] px-2 py-1 rounded-full ${getRandomColor()}`}>
                                             {tag.trim()}
                                         </span>
                                     ))}
-                                    
+
                                     {task.starred && (
                                         <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
                                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
@@ -281,7 +281,7 @@ export default function DashboardPage() {
                                 <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                             </Link>
                         </div>
-                        
+
                         <div className="space-y-3">
                             {reminders.slice(0, 3).map(reminder => (
                                 <div key={reminder.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                                     <div className={`w-3 h-3 rounded-full ${reminder.sent ? 'bg-green-500' : 'bg-orange-500'}`} />
                                 </div>
                             ))}
-                            
+
                             {reminders.length === 0 && (
                                 <p className="text-sm text-gray-500 text-center py-4">No upcoming reminders</p>
                             )}
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                                 <MoreHorizontal className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                             </Link>
                         </div>
-                        
+
                         <div className="space-y-3">
                             {recurringTasks.slice(0, 3).map(rt => (
                                 <div key={rt.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                                     <div className={`w-3 h-3 rounded-full ${rt.active ? 'bg-green-500' : 'bg-gray-400'}`} />
                                 </div>
                             ))}
-                            
+
                             {recurringTasks.length === 0 && (
                                 <p className="text-sm text-gray-500 text-center py-4">No recurring tasks</p>
                             )}
@@ -337,7 +337,7 @@ export default function DashboardPage() {
                             </div>
                             <Filter className="w-4 h-4 text-gray-400" />
                         </div>
-                        
+
                         <div className="space-y-2">
                             {tagStats.slice(0, 5).map((tagStat, index) => (
                                 <div key={index} className="flex items-center justify-between">
@@ -349,7 +349,7 @@ export default function DashboardPage() {
                                     <span className="text-xs text-gray-500">{tagStat.count}</span>
                                 </div>
                             ))}
-                            
+
                             {tagStats.length === 0 && (
                                 <p className="text-sm text-gray-500 text-center py-2">No tags available</p>
                             )}
@@ -388,7 +388,7 @@ export default function DashboardPage() {
                                 Insight Details <ArrowRight className="w-4 h-4" />
                             </button>
                         </Link>
-                        
+
                         <Link href="/calendar">
                             <button className="py-4 bg-white/10 backdrop-blur-md rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2 w-full">
                                 Calendar View <Calendar className="w-4 h-4" />

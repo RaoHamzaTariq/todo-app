@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from loguru import logger
 
-from ......backend.src.services.recurring_task_service import RecurringTaskService
-from ......backend.models.recurring_task_model import RecurringTask
-from ......backend.src.events.task_events import (
+from backend.src.services.recurring_task_service import RecurringTaskService
+from backend.src.models.recurring_task_model import RecurringTask
+from backend.src.events.task_events import (
     RecurringTaskInstanceCreatedEvent, RecurringTaskInstanceCreatedEventData
 )
-from ......backend.src.services.dapr_pubsub_service import publish_task_event
+from backend.src.services.dapr_pubsub_service import publish_task_event
 
 
 class RecurringTaskScheduler:

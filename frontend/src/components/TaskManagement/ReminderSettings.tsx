@@ -80,7 +80,7 @@ const ReminderSettings: React.FC<ReminderSettingsProps> = ({
       const newReminderData: CreateReminderRequest = {
         taskId: finalTaskId,
         reminderDateTime: new Date(formData.reminderDateTime).toISOString(),
-        channel: formData.channel
+        channel: formData.channel as 'email' | 'push' | 'sms'
       };
 
       const newReminder = await ReminderService.createReminder(userId, newReminderData);

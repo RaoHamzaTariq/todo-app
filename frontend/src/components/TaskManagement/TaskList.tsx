@@ -95,16 +95,16 @@ const TaskList: React.FC<TaskListProps> = ({ userId, onTaskUpdate, onTaskDelete 
 
       switch (sortOptions.sortBy) {
         case 'createdAt':
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
           break;
         case 'updatedAt':
-          aValue = new Date(a.updatedAt).getTime();
-          bValue = new Date(b.updatedAt).getTime();
+          aValue = new Date(a.updated_at).getTime();
+          bValue = new Date(b.updated_at).getTime();
           break;
         case 'dueDate':
-          aValue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-          bValue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+          aValue = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+          bValue = b.due_date ? new Date(b.due_date).getTime() : Infinity;
           break;
         case 'priority':
           const priorityOrder = { high: 3, medium: 2, low: 1 };
@@ -112,8 +112,8 @@ const TaskList: React.FC<TaskListProps> = ({ userId, onTaskUpdate, onTaskDelete 
           bValue = priorityOrder[b.priority as keyof typeof priorityOrder];
           break;
         default:
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
+          aValue = new Date(a.created_at).getTime();
+          bValue = new Date(b.created_at).getTime();
       }
 
       if (sortOptions.order === 'asc') {
@@ -331,9 +331,9 @@ const TaskList: React.FC<TaskListProps> = ({ userId, onTaskUpdate, onTaskDelete 
                 )}
 
                 <div className="task-meta">
-                  {task.dueDate && (
+                  {task.due_date && (
                     <span className="due-date">
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                      Due: {new Date(task.due_date).toLocaleDateString()}
                     </span>
                   )}
 

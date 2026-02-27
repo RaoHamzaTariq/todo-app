@@ -1,0 +1,11 @@
+# 1. Tag and Push images (Replace placeholders)
+docker tag todo-backend:v1.0.0 <region>.ocir.io/<namespace>/todo-backend:v1.0.0
+docker push <region>.ocir.io/<namespace>/todo-backend:v1.0.0
+# ... repeat for all 7 images ...
+
+# 2. Deploy to OKE
+helm install todo-app ./helm/todo-app \
+  --namespace todo-app \
+  --values values-oracle-cloud.yaml \
+  --set backend.image.repository=<region>.ocir.io/<namespace>/todo-backend \
+  # ... set repositories for other images ...

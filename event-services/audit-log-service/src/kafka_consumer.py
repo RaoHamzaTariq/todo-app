@@ -10,7 +10,7 @@ from loguru import logger
 import aiofiles
 import os
 
-from ....backend.src.events.task_events import (
+from backend.src.events.task_events import (
     EventBase, AuditEvent, TaskCreatedEvent, TaskUpdatedEvent,
     RecurringTaskCreatedEvent, ReminderScheduledEvent
 )

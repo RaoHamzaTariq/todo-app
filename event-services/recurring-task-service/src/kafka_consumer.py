@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, Callable
 from loguru import logger
 
-from ....backend.src.events.task_events import (
+from backend.src.events.task_events import (
     EventBase, RecurringTaskCreatedEvent, RecurringTaskInstanceCreatedEvent,
     TaskCreatedEvent, TaskUpdatedEvent
 )

@@ -394,7 +394,7 @@ daprComponents:
     consumerGroup: "dapr-consumer-group"
     clientID: "dapr-kafka-client"
     authRequired: false
-  
+
   postgresStateStore:
     enabled: true
     connectionString: "postgresql://[user]:[password]@[host]:[port]/[database]?sslmode=disable"
@@ -533,7 +533,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -554,23 +554,23 @@ jobs:
       run: |
         # Login to OCIR
         echo ${{ secrets.OCI_AUTH_TOKEN }} | docker login ${REGION_CODE}.ocir.io -u '${{ secrets.OCI_TENANCY }}/oracleidentitycloudservice/${{ secrets.OCI_USER }}'
-        
+
         # Build and push images
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/todo-backend:${{ github.sha }} -f backend/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/todo-backend:${{ github.sha }}
-        
+
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/todo-frontend:${{ github.sha }} -f frontend/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/todo-frontend:${{ github.sha }}
-        
+
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/reminder-service:${{ github.sha }} -f event-services/reminder-service/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/reminder-service:${{ github.sha }}
-        
+
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/recurring-task-service:${{ github.sha }} -f event-services/recurring-task-service/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/recurring-task-service:${{ github.sha }}
-        
+
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/audit-log-service:${{ github.sha }} -f event-services/audit-log-service/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/audit-log-service:${{ github.sha }}
-        
+
         docker build -t ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/notification-service:${{ github.sha }} -f event-services/notification-service/Dockerfile .
         docker push ${REGION_CODE}.ocir.io/${TENANT_NAMESPACE}/notification-service:${{ github.sha }}
 

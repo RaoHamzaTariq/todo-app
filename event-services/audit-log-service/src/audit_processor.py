@@ -341,7 +341,7 @@ async def run_audit_service():
 
     # Initialize database session
     # This is a simplified initialization - in reality, you'd want to manage sessions properly
-    from ....backend.src.core.database import engine
+    from backend.src.app.database import engine
     session = Session(engine)
 
     # Initialize audit service

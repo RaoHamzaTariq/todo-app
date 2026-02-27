@@ -9,10 +9,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from loguru import logger
 
-from ......backend.src.services.reminder_service import ReminderService
-from ......backend.models.reminder_model import Reminder
-from ......backend.src.events.task_events import ReminderTriggeredEvent, ReminderScheduledEvent
-from ......backend.src.services.dapr_pubsub_service import publish_task_event
+from backend.src.services.reminder_service import ReminderService
+from backend.src.models.reminder_model import Reminder
+from backend.src.events.task_events import ReminderTriggeredEvent, ReminderScheduledEvent
+from backend.src.services.dapr_pubsub_service import publish_task_event
 
 
 class ReminderProcessor:

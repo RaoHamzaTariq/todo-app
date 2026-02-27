@@ -1,0 +1,12 @@
+dependencies:
+- name: dapr
+  repository: https://dapr.github.io/helm-charts
+  version: 1.14.4
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 20.1.1
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 15.5.38
+digest: sha256:63db1017d9ec76c1fb8ca7aca33eed6f900d6ea6e1022d101af93bc5da353db1
+generated: "2026-02-08T17:27:39.6308655+05:00"

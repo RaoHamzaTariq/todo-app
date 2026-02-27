@@ -24,8 +24,8 @@ appVersion: "1.0.0"
 
 dependencies:
   - name: dapr
-    version: "1.x.x"
-    repository: "https://daprio.azurecr.io/helm/v1/repo"
+    version: "1.14.4"
+    repository: "https://dapr.github.io/helm-charts"
     condition: dapr.enabled
   - name: kafka
     version: "20.x.x"

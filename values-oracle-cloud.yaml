@@ -1,0 +1,205 @@
+# values-oracle-cloud.yaml
+global:
+  postgres:
+    enabled: true
+    databaseUrl: "postgresql://[user]:[password]@[host]:[port]/[database]"
+  
+  auth:
+    enabled: true
+    secret: "[your-super-secret-key-min-32-chars]"
+
+# Backend configuration
+backend:
+  replicaCount: 2
+  image:
+    repository: "<region-code>.ocir.io/<tenant-namespace>/todo-backend"
+    pullPolicy: Always
+    tag: "v1.0.0"
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  env:
+    DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+    MCP_SERVER_URL: "http://mcp-server:8001"
+    KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+    DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+    DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+    BETTER_AUTH_SECRET: "[your-super-secret-key-min-32-chars]"
+    JWT_ALGORITHM: "HS256"
+    ENVIRONMENT: "production"
+
+# Frontend configuration
+frontend:
+  replicaCount: 2
+  image:
+    repository: "<region-code>.ocir.io/<tenant-namespace>/todo-frontend"
+    pullPolicy: Always
+    tag: "v1.0.0"
+  service:
+    type: LoadBalancer
+    port: 80
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    NEXT_PUBLIC_API_URL: "http://backend:80"
+    NEXT_PUBLIC_MCP_SERVER_URL: "http://mcp-server:80"
+    NEXT_PUBLIC_DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+    NEXT_PUBLIC_KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+    BETTER_AUTH_SECRET: "[your-super-secret-key-min-32-chars]"
+
+# MCP Server configuration
+mcpServer:
+  replicaCount: 1
+  image:
+    repository: "<region-code>.ocir.io/<tenant-namespace>/todo-backend" # Uses backend image? Check Dockerfile.mcp
+    pullPolicy: Always
+    tag: "v1.0.0"
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 150m
+      memory: 128Mi
+  env:
+    DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+    KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+    DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+    DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+    BETTER_AUTH_SECRET: "[your-super-secret-key-min-32-chars]"
+    JWT_ALGORITHM: "HS256"
+    ENVIRONMENT: "production"
+
+# Event services configurations
+eventServices:
+  reminderService:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: "<region-code>.ocir.io/<tenant-namespace>/reminder-service"
+      pullPolicy: Always
+      tag: "v1.0.0"
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    env:
+      DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+      KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+      DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+      DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+      ENVIRONMENT: "production"
+
+  recurringTaskService:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: "<region-code>.ocir.io/<tenant-namespace>/recurring-task-service"
+      pullPolicy: Always
+      tag: "v1.0.0"
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    env:
+      DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+      KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+      DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+      DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+      ENVIRONMENT: "production"
+
+  auditLogService:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: "<region-code>.ocir.io/<tenant-namespace>/audit-log-service"
+      pullPolicy: Always
+      tag: "v1.0.0"
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    env:
+      DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+      KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+      DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+      DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+      ENVIRONMENT: "production"
+
+  notificationService:
+    enabled: true
+    replicaCount: 1
+    image:
+      repository: "<region-code>.ocir.io/<tenant-namespace>/notification-service"
+      pullPolicy: Always
+      tag: "v1.0.0"
+    service:
+      type: ClusterIP
+      port: 80
+    resources:
+      limits:
+        cpu: 200m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+    env:
+      DATABASE_URL: "postgresql://[user]:[password]@[host]:[port]/[database]"
+      KAFKA_BROKER: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+      DAPR_HTTP_ENDPOINT: "http://localhost:3500"
+      DAPR_GRPC_ENDPOINT: "grpc://localhost:50001"
+      ENVIRONMENT: "production"
+
+# Dapr component configurations
+daprComponents:
+  kafkaPubSub:
+    enabled: true
+    brokers: "todo-kafka-kafka-brokers.kafka.svc.cluster.local:9092"
+    consumerGroup: "dapr-consumer-group"
+    clientID: "dapr-kafka-client"
+    authRequired: false
+
+  postgresStateStore:
+    enabled: true
+    connectionString: "postgresql://[user]:[password]@[host]:[port]/[database]?sslmode=disable"
+    actorStateStore: true
+
+  cronBinding:
+    enabled: true
+    schedule: "@every 30s"
+
+  kubernetesSecretStore:
+    enabled: true
